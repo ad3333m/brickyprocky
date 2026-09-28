@@ -169,7 +169,8 @@
 
   function loadCatalog() {
     if (!catalogPromise) {
-      catalogPromise = fetch("games/catalog.json")
+      // GitHub Pages caches files for 10 minutes; revalidate so updates show at once.
+      catalogPromise = fetch("games/catalog.json", { cache: "no-cache" })
         .then((res) => {
           if (!res.ok) throw new Error("HTTP " + res.status);
           return res.json();

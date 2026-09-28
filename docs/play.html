@@ -69,7 +69,7 @@
         document.head.appendChild(script);
       }
 
-      fetch("games/catalog.json")
+      fetch("games/catalog.json", { cache: "no-cache" })
         .then(function (res) { return res.json(); })
         .then(function (data) {
           var game = null;
