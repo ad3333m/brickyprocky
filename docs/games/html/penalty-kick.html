@@ -1,0 +1,133 @@
+<div id="container">
+  <iframe id="fr" width="100%" height="100%" frameborder="0" allowfullscreen src=""></iframe>
+  <button class="play-button" type="button" onclick="PlayTo(this)">CLICK TO PLAY</button>
+  <p id="unblocked-text">G+</p>
+  <button class="fullscreen-button" type="button" onclick="openFullscreen()">FULLSCREEN</button>
+</div>
+
+<style>
+  #container {
+    position: relative;
+    width: 100%;
+    height: 100vh;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+  }
+
+  #fr {
+    display: none;
+    width: 100%;
+    height: 100%;
+    border: none;
+    background: #000;
+  }
+
+  .play-button {
+    display: inline-block;
+    padding: 20px 40px;
+    background-color: #000000;
+    color: #ffffff !important;
+    border: 2px solid #4a148c;
+    border-radius: 10px;
+    font-family: Arial, sans-serif;
+    font-size: 24px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none !important;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1001;
+  }
+  
+  .play-button:hover {
+    background-color: #4a148c !important;
+    transform: translate(-50%, -50%) scale(1.05);
+  }
+  
+  .fullscreen-button {
+    display: inline-block;
+    padding: 10px 15px;
+    background-color: #000000;
+    color: #ffffff !important;
+    border: 2px solid #4a148c;
+    border-radius: 5px;
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none !important;
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1002;
+  }
+  
+  .fullscreen-button:hover {
+    background-color: #4a148c !important;
+    transform: scale(1.05);
+  }
+  
+  body, html {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    height: 100%;
+  }
+</style>
+
+<script>
+  const DEFAULT_URL = 'https://rawcdn.githack.com/PenaltyKickOnline/PenaltyKickOnline.github.io/f432955990ac6493d47a17a9e56fbc3e7483713a/index.html'; // Varsayılan site URL'si buraya eklenecek
+
+  function PlayTo(button) {
+    const iframe = document.getElementById("fr");
+    iframe.src = DEFAULT_URL;
+    iframe.style.display = "block";
+    button.style.display = "none";
+  }
+
+  function openFullscreen() {
+    const newWindow = window.open("about:blank", "_blank");
+    if (newWindow) {
+      newWindow.document.open();
+      newWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <style>
+            body, html {
+              margin: 0;
+              padding: 0;
+              overflow: hidden;
+              height: 100%;
+              width: 100%;
+            }
+            iframe {
+              width: 100%;
+              height: 100%;
+              border: none;
+            }
+          </style>
+        </head>
+        <body>
+          <iframe src="${DEFAULT_URL}" allowfullscreen></iframe>
+        </body>
+        </html>
+      `);
+      newWindow.document.close();
+    } else {
+      alert('Tam ekran penceresi açılamadı. Popup engelleyicisini kontrol edin.');
+    }
+  }
+
+  // Iframe yükleme hatası kontrolü
+  document.getElementById("fr").onerror = function() {
+    alert('Site yüklenemedi. İnternet bağlantınızı kontrol edin.');
+    this.style.display = "none";
+    document.querySelector(".play-button").style.display = "block";
+  };
+</script>

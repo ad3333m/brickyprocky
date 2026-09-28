@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bill Gates Simulator</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif;
+    background: #edf1f5;
+    color: #1f2937;
+    min-height: 100vh;
+  }
+  header {
+    text-align: center;
+    padding: 34px 16px 22px;
+  }
+  header h1 {
+    font-size: clamp(1.7rem, 5vw, 2.5rem);
+    font-weight: 800;
+    color: #14304e;
+    letter-spacing: -0.5px;
+    margin-top: 10px;
+  }
+  header p.alt {
+    color: #5b6b7c;
+    margin-top: 8px;
+    font-size: clamp(0.95rem, 3vw, 1.1rem);
+  }
+  .para-bar {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: linear-gradient(180deg, #27ae60, #1e8e4e);
+    color: #fff;
+    text-align: center;
+    padding: 12px 8px 14px;
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.18);
+  }
+  .para-bar .etiket {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 3px;
+    opacity: 0.85;
+  }
+  #para {
+    font-size: clamp(1.5rem, 5.5vw, 2.5rem);
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.25);
+    display: inline-block;
+  }
+  #para.pop { animation: pop 0.18s ease; }
+  @keyframes pop { 50% { transform: scale(1.07); } }
+  .kazandin {
+    margin-top: 8px;
+    background: rgba(255, 255, 255, 0.18);
+    border: 2px dashed rgba(255, 255, 255, 0.6);
+    border-radius: 10px;
+    display: inline-block;
+    padding: 6px 14px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    animation: parla 1s ease infinite;
+  }
+  @keyframes parla { 50% { transform: scale(1.04); } }
+  .gizli { display: none !important; }
+
+  .urunler {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(228px, 1fr));
+    gap: 18px;
+    max-width: 1120px;
+    margin: 28px auto 10px;
+    padding: 0 16px;
+  }
+  .kart {
+    background: #fff;
+    border-radius: 14px;
+    padding: 22px 14px 18px;
+    text-align: center;
+    box-shadow: 0 2px 10px rgba(20, 48, 78, 0.08);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  @media (hover: hover) {
+    .kart:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 18px rgba(20, 48, 78, 0.14);
+    }
+  }
+  .kart .emoji {
+    font-size: 56px;
+    line-height: 1.15;
+    font-family: "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif;
+    transition: opacity 0.2s;
+  }
+  .kart h3 {
+    margin: 10px 0 2px;
+    font-size: 1.06rem;
+    font-weight: 700;
+    transition: opacity 0.2s;
+  }
+  .kart .fiyat {
+    color: #1e8e4e;
+    font-weight: 800;
+    margin-bottom: 13px;
+    font-variant-numeric: tabular-nums;
+    transition: opacity 0.2s;
+  }
+  .kart.soluk .emoji, .kart.soluk h3, .kart.soluk .fiyat { opacity: 0.4; }
+  .kontrol {
+    display: flex;
+    gap: 7px;
+    justify-content: center;
+    align-items: center;
+  }
+  .kontrol button {
+    border: none;
+    color: #fff;
+    font-weight: 800;
+    font-size: 0.95rem;
+    font-family: inherit;
+    padding: 10px 0;
+    width: 62px;
+    border-radius: 9px;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    transition: transform 0.06s ease, background 0.15s ease;
+  }
+  .kontrol button.al { background: #27ae60; }
+  .kontrol button.sat { background: #e74c3c; }
+  .kontrol button:not(:disabled):active { transform: scale(0.93); }
+  .kontrol button:disabled {
+    background: #ccd5de;
+    cursor: not-allowed;
+  }
+  .kontrol input.adet {
+    width: 72px;
+    text-align: center;
+    font-size: 1rem;
+    font-weight: 700;
+    font-family: inherit;
+    padding: 9px 4px;
+    border: 2px solid #d8dfe6;
+    border-radius: 9px;
+    color: #14304e;
+    background: #fff;
+  }
+  .kontrol input.adet:focus {
+    outline: none;
+    border-color: #27ae60;
+  }
+
+  .makbuz {
+    background: #fff;
+    max-width: 500px;
+    margin: 36px auto 20px;
+    padding: 28px 26px 24px;
+    border-radius: 8px;
+    box-shadow: 0 5px 16px rgba(20, 48, 78, 0.12);
+    font-family: "Courier New", Courier, monospace;
+  }
+  .makbuz h2 {
+    text-align: center;
+    letter-spacing: 4px;
+    font-size: 1.2rem;
+    border-bottom: 2px dashed #cbd5e1;
+    padding-bottom: 12px;
+    margin-bottom: 12px;
+  }
+  .makbuz .satir {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 5px 0;
+    border-bottom: 1px dashed #e2e8f0;
+    font-size: 0.92rem;
+  }
+  .makbuz .satir span:last-child { white-space: nowrap; font-weight: 700; }
+  .makbuz .ozet {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 14px;
+    font-weight: 700;
+  }
+  .makbuz .ozet.buyuk {
+    font-size: 1.05rem;
+    border-top: 2px dashed #cbd5e1;
+    padding-top: 12px;
+  }
+  .makbuz .tesekkur {
+    text-align: center;
+    margin-top: 16px;
+    color: #94a3b8;
+    font-size: 0.85rem;
+    letter-spacing: 1px;
+  }
+
+  footer {
+    text-align: center;
+    color: #8a97a5;
+    padding: 26px 16px 40px;
+    font-size: 0.85rem;
+    line-height: 1.7;
+  }
+  #sifirla {
+    border: 2px solid #c3ced8;
+    background: #fff;
+    color: #5b6b7c;
+    font-weight: 700;
+    font-family: inherit;
+    font-size: 0.9rem;
+    padding: 9px 22px;
+    border-radius: 999px;
+    cursor: pointer;
+    margin-bottom: 14px;
+    transition: transform 0.06s ease;
+  }
+  #sifirla:active { transform: scale(0.95); }
+
+  .konfeti {
+    position: fixed;
+    top: -50px;
+    z-index: 100;
+    pointer-events: none;
+    animation: dus 3s linear forwards;
+    font-family: "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif;
+  }
+  @keyframes dus {
+    to { transform: translateY(115vh) rotate(560deg); opacity: 0.9; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <svg viewBox="0 0 200 200" width="130" height="130" role="img" aria-label="Bill Gates illustration">
+    <defs><clipPath id="cerceve"><circle cx="100" cy="100" r="94"/></clipPath></defs>
+    <circle cx="100" cy="100" r="94" fill="#d7e9fb"/>
+    <g clip-path="url(#cerceve)">
+      <path d="M30 210 Q38 152 100 150 Q162 152 170 210 Z" fill="#1e3a5f"/>
+      <path d="M84 153 L100 178 L116 153 Q100 160 84 153 Z" fill="#ffffff"/>
+      <path d="M96 161 L104 161 L108 192 L100 200 L92 192 Z" fill="#8c2332"/>
+      <rect x="87" y="124" width="26" height="32" rx="11" fill="#eec39a"/>
+      <circle cx="55" cy="100" r="10" fill="#f6d0a6"/>
+      <circle cx="145" cy="100" r="10" fill="#f6d0a6"/>
+      <ellipse cx="100" cy="97" rx="44" ry="48" fill="#f6d0a6"/>
+      <path d="M56 88 Q52 44 100 40 Q148 44 144 88 Q138 62 110 58 Q116 50 106 45 Q96 56 72 61 Q58 68 56 88 Z" fill="#b08d57"/>
+      <g fill="rgba(255,255,255,0.35)" stroke="#374151" stroke-width="5">
+        <rect x="61" y="81" width="33" height="27" rx="9"/>
+        <rect x="106" y="81" width="33" height="27" rx="9"/>
+      </g>
+      <line x1="94" y1="92" x2="106" y2="92" stroke="#374151" stroke-width="5"/>
+      <circle cx="78" cy="95" r="4" fill="#1f2937"/>
+      <circle cx="122" cy="95" r="4" fill="#1f2937"/>
+      <path d="M100 100 Q105 112 98 116" fill="none" stroke="#d9a06b" stroke-width="4" stroke-linecap="round"/>
+      <path d="M83 126 Q100 139 117 126" fill="none" stroke="#a3652f" stroke-width="4.5" stroke-linecap="round"/>
+    </g>
+  </svg>
+  <h1>Bill Gates Simulator</h1>
+  <p class="alt">You have <b>$100 billion</b> in your pocket. Can you spend it all?</p>
+</header>
+
+<div class="para-bar">
+  <div class="etiket">MONEY LEFT</div>
+  <div id="para">$100,000,000,000</div>
+  <div id="kazandin" class="kazandin gizli">🎉 CONGRATULATIONS! You spent all of Bill Gates' money! 🎉</div>
+</div>
+
+<main>
+  <div class="urunler" id="urunler"></div>
+
+  <section class="makbuz gizli" id="makbuz">
+    <h2>🧾 RECEIPT</h2>
+    <div id="makbuzListe"></div>
+    <div class="ozet buyuk"><span>TOTAL SPENT</span><span id="toplam">$0</span></div>
+    <div class="ozet"><span>MONEY LEFT</span><span id="kalan">$0</span></div>
+    <div class="tesekkur">*** THANK YOU FOR SHOPPING WITH US ***</div>
+  </section>
+</main>
+
+<footer>
+  <button id="sifirla">🔄 Start Over</button>
+  <div>This game works completely offline — it contains no external links. Have fun! 🎮</div>
+</footer>
+
+<script>
+  var BASLANGIC = 100000000000;
+  var URUNLER = [
+    { e: "🍔", n: "Big Mac", p: 2 },
+    { e: "👡", n: "Flip Flops", p: 3 },
+    { e: "🥤", n: "Coca-Cola Pack", p: 5 },
+    { e: "🎟️", n: "Movie Ticket", p: 12 },
+    { e: "📚", n: "Book", p: 15 },
+    { e: "🦞", n: "Lobster Dinner", p: 45 },
+    { e: "🎮", n: "Video Game", p: 60 },
+    { e: "🔊", n: "Amazon Echo", p: 99 },
+    { e: "📺", n: "Year of Netflix", p: 100 },
+    { e: "👟", n: "Air Jordans", p: 125 },
+    { e: "🎧", n: "AirPods", p: 199 },
+    { e: "🕹️", n: "Gaming Console", p: 299 },
+    { e: "🛸", n: "Drone", p: 350 },
+    { e: "📱", n: "Smartphone", p: 699 },
+    { e: "🚲", n: "Bike", p: 800 },
+    { e: "🐱", n: "Kitten", p: 1500 },
+    { e: "🐶", n: "Puppy", p: 1500 },
+    { e: "🛺", n: "Tuk Tuk", p: 2300 },
+    { e: "🐴", n: "Horse", p: 2500 },
+    { e: "🌾", n: "Acre of Farmland", p: 3000 },
+    { e: "👜", n: "Designer Handbag", p: 5500 },
+    { e: "🛁", n: "Hot Tub", p: 6000 },
+    { e: "🏺", n: "Antique Vase", p: 7000 },
+    { e: "💍", n: "Diamond Ring", p: 10000 },
+    { e: "🚤", n: "Jet Ski", p: 12000 },
+    { e: "⌚", n: "Rolex", p: 15000 },
+    { e: "🚚", n: "Pickup Truck", p: 30000 },
+    { e: "🚘", n: "Tesla", p: 75000 },
+    { e: "🚙", n: "Monster Truck", p: 150000 },
+    { e: "🏎️", n: "Ferrari", p: 250000 },
+    { e: "🏠", n: "Single Family Home", p: 300000 },
+    { e: "🥇", n: "Gold Bar", p: 700000 },
+    { e: "🍟", n: "McDonald's Franchise", p: 1500000 },
+    { e: "🏈", n: "Super Bowl Ad", p: 5250000 },
+    { e: "🛥️", n: "Yacht", p: 7500000 },
+    { e: "🎖️", n: "Tank (M1 Abrams)", p: 8000000 },
+    { e: "🏁", n: "Formula 1 Car", p: 15000000 },
+    { e: "🚁", n: "Attack Helicopter", p: 31000000 },
+    { e: "🏰", n: "Mansion", p: 45000000 },
+    { e: "🎬", n: "Make a Movie", p: 100000000 },
+    { e: "✈️", n: "Boeing 747", p: 148000000 },
+    { e: "🖼️", n: "Mona Lisa", p: 780000000 },
+    { e: "🏙️", n: "Skyscraper", p: 850000000 },
+    { e: "🚢", n: "Cruise Ship", p: 930000000 },
+    { e: "🏀", n: "NBA Team", p: 2120000000 }
+  ];
+
+  var para = BASLANGIC;
+  var adet = URUNLER.map(function () { return 0; });
+  var refs = [];
+  var kutlandi = false;
+
+  function fmt(n) { return "$" + n.toLocaleString("en-US"); }
+  function sayi(n) { return n.toLocaleString("en-US"); }
+
+  var grid = document.getElementById("urunler");
+  URUNLER.forEach(function (u, i) {
+    var kart = document.createElement("div");
+    kart.className = "kart";
+    kart.innerHTML =
+      '<div class="emoji">' + u.e + '</div>' +
+      '<h3>' + u.n + '</h3>' +
+      '<div class="fiyat">' + fmt(u.p) + '</div>' +
+      '<div class="kontrol">' +
+      '  <button class="sat" aria-label="Sell ' + u.n + '">Sell</button>' +
+      '  <input class="adet" inputmode="numeric" maxlength="13" value="0" aria-label="' + u.n + ' quantity">' +
+      '  <button class="al" aria-label="Buy ' + u.n + '">Buy</button>' +
+      '</div>';
+    grid.appendChild(kart);
+
+    var sat = kart.querySelector(".sat");
+    var al = kart.querySelector(".al");
+    var inp = kart.querySelector(".adet");
+
+    sat.addEventListener("click", function () { degistir(i, -1); });
+    al.addEventListener("click", function () { degistir(i, 1); });
+
+    inp.addEventListener("input", function () {
+      var temiz = inp.value.replace(/\D/g, "");
+      if (temiz !== inp.value) inp.value = temiz;
+      if (temiz === "") { adetAyarla(i, 0, true); return; }
+      adetAyarla(i, parseInt(temiz, 10), false);
+    });
+    inp.addEventListener("blur", function () { inp.value = adet[i]; });
+
+    refs.push({ kart: kart, sat: sat, al: al, inp: inp });
+  });
+
+  function degistir(i, yon) {
+    var f = URUNLER[i].p;
+    if (yon > 0 && para < f) return;
+    if (yon < 0 && adet[i] === 0) return;
+    adet[i] += yon;
+    para -= yon * f;
+    guncelle();
+  }
+
+  function adetAyarla(i, istenen, bosKalsin) {
+    var f = URUNLER[i].p;
+    var enFazla = adet[i] + Math.floor(para / f);
+    var yeni = Math.max(0, Math.min(istenen, enFazla));
+    para += (adet[i] - yeni) * f;
+    adet[i] = yeni;
+    guncelle(i, bosKalsin);
+  }
+
+  function guncelle(yazilanIndex, bosKalsin) {
+    var paraEl = document.getElementById("para");
+    paraEl.textContent = fmt(para);
+    paraEl.classList.remove("pop");
+    void paraEl.offsetWidth;
+    paraEl.classList.add("pop");
+
+    URUNLER.forEach(function (u, i) {
+      var r = refs[i];
+      r.al.disabled = para < u.p;
+      r.sat.disabled = adet[i] === 0;
+      r.kart.classList.toggle("soluk", para < u.p && adet[i] === 0);
+      var deger = String(adet[i]);
+      if (i === yazilanIndex) {
+        if (!bosKalsin && r.inp.value !== deger) r.inp.value = deger;
+      } else if (document.activeElement !== r.inp && r.inp.value !== deger) {
+        r.inp.value = deger;
+      }
+    });
+
+    var harcanan = BASLANGIC - para;
+    var makbuz = document.getElementById("makbuz");
+    if (harcanan > 0) {
+      makbuz.classList.remove("gizli");
+      var html = "";
+      URUNLER.forEach(function (u, i) {
+        if (adet[i] > 0) {
+          html += '<div class="satir"><span>' + u.e + " " + u.n +
+                  " <b>×" + sayi(adet[i]) + "</b></span><span>" +
+                  fmt(u.p * adet[i]) + "</span></div>";
+        }
+      });
+      document.getElementById("makbuzListe").innerHTML = html;
+      document.getElementById("toplam").textContent = fmt(harcanan);
+      document.getElementById("kalan").textContent = fmt(para);
+    } else {
+      makbuz.classList.add("gizli");
+    }
+
+    var kazandin = document.getElementById("kazandin");
+    if (para === 0) {
+      kazandin.classList.remove("gizli");
+      if (!kutlandi) { kutlandi = true; konfeti(); }
+    } else {
+      kazandin.classList.add("gizli");
+      kutlandi = false;
+    }
+  }
+
+  function konfeti() {
+    var semboller = ["💵", "💰", "🎉", "✨", "🤑", "💸"];
+    for (var k = 0; k < 70; k++) {
+      var s = document.createElement("span");
+      s.className = "konfeti";
+      s.textContent = semboller[k % semboller.length];
+      s.style.left = (Math.random() * 100) + "vw";
+      s.style.animationDuration = (2.2 + Math.random() * 1.8) + "s";
+      s.style.animationDelay = (Math.random() * 0.6) + "s";
+      s.style.fontSize = (16 + Math.random() * 26) + "px";
+      document.body.appendChild(s);
+      (function (el) { setTimeout(function () { el.remove(); }, 5200); })(s);
+    }
+  }
+
+  document.getElementById("sifirla").addEventListener("click", function () {
+    para = BASLANGIC;
+    for (var i = 0; i < adet.length; i++) adet[i] = 0;
+    kutlandi = false;
+    guncelle();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+
+  guncelle();
+</script>
+</body>
+</html>

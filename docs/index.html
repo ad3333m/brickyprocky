@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>BrickyProcky</title>
+  <meta name="description" content="BrickyProcky: hundreds of games that play right in the page, plus a built-in web proxy." />
+  <meta name="theme-color" content="#07071a" />
+  <link rel="icon" type="image/svg+xml" href="assets/logo.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/app.css" />
+  <script src="scram/scramjet.all.js" defer></script>
+  <script src="baremux/index.js" defer></script>
+  <script src="assets/app.js" defer></script>
+</head>
+<body>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="i-gamepad" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M6.5 7h11a4.5 4.5 0 0 1 4.4 5.5l-1 4.3a2.6 2.6 0 0 1-4.5 1.1L14.7 16H9.3l-1.7 1.9a2.6 2.6 0 0 1-4.5-1.1l-1-4.3A4.5 4.5 0 0 1 6.5 7ZM7.5 10v4M5.5 12h4M15.5 11.2h.01M17.8 13.4h.01"/></symbol>
+    <symbol id="i-globe" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9.2"/><path d="M2.8 12h18.4M12 2.8c2.6 2.6 3.9 5.6 3.9 9.2s-1.3 6.6-3.9 9.2c-2.6-2.6-3.9-5.6-3.9-9.2S9.4 5.4 12 2.8Z"/></g></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="6.8"/><path d="m20 20-4.2-4.2"/></g></symbol>
+    <symbol id="i-gear" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.1"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></g></symbol>
+    <symbol id="i-back" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M15 5.5 8.5 12l6.5 6.5"/></symbol>
+    <symbol id="i-forward" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M9 5.5 15.5 12 9 18.5"/></symbol>
+    <symbol id="i-reload" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19.5 12a7.5 7.5 0 1 1-2.2-5.3"/><path d="M19.8 4.2v4.3h-4.3"/></g></symbol>
+    <symbol id="i-home" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" d="M3.5 11 12 4l8.5 7M6 9.2V19a1 1 0 0 0 1 1h3.5v-5h3v5H17a1 1 0 0 0 1-1V9.2"/></symbol>
+    <symbol id="i-expand" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M6 6l12 12M18 6 6 18"/></symbol>
+    <symbol id="i-star" viewBox="0 0 24 24"><path fill="currentColor" d="m12 3.2 2.6 5.5 6 .8-4.4 4.2 1.1 6-5.3-2.9-5.3 2.9 1.1-6-4.4-4.2 6-.8Z"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><path fill="currentColor" d="M8 5.6v12.8a1 1 0 0 0 1.5.9l10-6.4a1 1 0 0 0 0-1.8l-10-6.4A1 1 0 0 0 8 5.6Z"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M13 6l6 6-6 6"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="10.5" width="14" height="10" rx="2.5"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/></g></symbol>
+  </svg>
+
+  <div class="bg" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+
+  <header class="nav glass">
+    <a class="brand" href="#/" aria-label="BrickyProcky home">
+      <img src="assets/logo.svg" alt="" width="30" height="30" />
+      <span>BrickyProcky</span>
+    </a>
+    <nav class="tabs" aria-label="Sections">
+      <span class="tab-glider" aria-hidden="true"></span>
+      <a href="#/" data-tab="home">Home</a>
+      <a href="#/games" data-tab="games">Games</a>
+      <a href="#/proxy" data-tab="proxy">Proxy</a>
+    </nav>
+    <button class="icon-btn" id="settingsBtn" type="button" aria-label="Settings" title="Settings">
+      <svg><use href="#i-gear" /></svg>
+    </button>
+  </header>
+
+  <main>
+    <!-- Home -->
+    <section class="view" id="view-home" data-view="home">
+      <div class="hero">
+        <div class="hero-mark"><img src="assets/logo.svg" alt="" width="84" height="84" /></div>
+        <h1 class="title">BrickyProcky</h1>
+        <p class="tagline">Games and the open web, all in one tab.</p>
+
+        <div class="choices">
+          <a class="choice glass" href="#/games">
+            <span class="choice-icon games"><svg><use href="#i-gamepad" /></svg></span>
+            <span class="choice-title">Games</span>
+            <span class="choice-desc"><b class="game-total">680</b> games that play right inside BrickyProcky. No redirects and no downloads: pick one and it opens here, full screen if you want.</span>
+            <span class="choice-cta">Browse games <svg><use href="#i-arrow" /></svg></span>
+          </a>
+          <a class="choice glass" href="#/proxy">
+            <span class="choice-icon proxy"><svg><use href="#i-globe" /></svg></span>
+            <span class="choice-title">Proxy</span>
+            <span class="choice-desc">Open any website through BrickyProcky's built-in proxy. Discord, GeForce NOW, YouTube and more run in this tab, with your traffic encrypted end to end.</span>
+            <span class="choice-cta">Open proxy <svg><use href="#i-arrow" /></svg></span>
+          </a>
+        </div>
+
+        <div class="suggest">
+          <div class="section-label">Suggested apps</div>
+          <div class="apps" id="homeApps"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Games -->
+    <section class="view" id="view-games" data-view="games" hidden>
+      <div class="games-wrap">
+        <div class="games-head">
+          <div>
+            <h2 class="page-title">Games</h2>
+            <p class="page-sub"><b class="game-total">680</b> games, all playable inside BrickyProcky</p>
+          </div>
+          <label class="search glass">
+            <svg><use href="#i-search" /></svg>
+            <input id="gameSearch" type="search" placeholder="Search games" autocomplete="off" spellcheck="false" />
+            <kbd>/</kbd>
+          </label>
+        </div>
+
+        <div id="featured"></div>
+        <div id="recent"></div>
+
+        <div class="chips" id="chips" role="tablist" aria-label="Game categories"></div>
+        <div class="grid" id="grid"></div>
+        <div class="empty" id="gamesEmpty" hidden>
+          <p>No games match that.</p>
+          <button class="btn" type="button" id="clearSearch">Show all games</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Proxy -->
+    <section class="view" id="view-proxy" data-view="proxy" hidden>
+      <div class="hero proxy-hero">
+        <div class="hero-mark small"><img src="assets/logo.svg" alt="" width="64" height="64" /></div>
+        <h1 class="title mid">BrickyProcky</h1>
+        <p class="tagline">Browse privately through the BrickyProcky proxy.</p>
+        <form class="omni glass" id="omni" autocomplete="off">
+          <svg class="omni-ico"><use href="#i-search" /></svg>
+          <input id="omniInput" type="text" placeholder="Search the web or type a URL" spellcheck="false" autocapitalize="off" enterkeyhint="go" />
+          <button class="go" type="submit" aria-label="Go"><svg><use href="#i-arrow" /></svg></button>
+        </form>
+        <div class="relay" id="relay"><span class="dot"></span><span id="relayText">Proxy relay not connected yet</span></div>
+        <div class="suggest">
+          <div class="section-label">Popular apps</div>
+          <div class="apps" id="proxyApps"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Game player -->
+  <div class="layer" id="player" hidden>
+    <div class="layer-bar glass">
+      <button class="icon-btn" type="button" data-act="close" aria-label="Back to games" title="Back"><svg><use href="#i-back" /></svg></button>
+      <div class="layer-title">
+        <span class="layer-thumb" id="playerThumb"></span>
+        <div><b id="playerName">Game</b><span id="playerTags"></span></div>
+      </div>
+      <div class="spacer"></div>
+      <button class="icon-btn" type="button" data-act="fav" aria-label="Favourite" title="Favourite"><svg><use href="#i-star" /></svg></button>
+      <button class="icon-btn" type="button" data-act="reload" aria-label="Restart game" title="Restart"><svg><use href="#i-reload" /></svg></button>
+      <button class="icon-btn" type="button" data-act="full" aria-label="Full screen" title="Full screen"><svg><use href="#i-expand" /></svg></button>
+    </div>
+    <div class="stage" id="playerStage">
+      <div class="loading" id="playerLoading"><span class="spinner"></span><span id="playerLoadingText">Loading…</span></div>
+    </div>
+  </div>
+
+  <!-- Proxy browser -->
+  <div class="layer" id="browser" hidden>
+    <div class="layer-bar glass">
+      <button class="icon-btn" type="button" data-act="back" aria-label="Back" title="Back"><svg><use href="#i-back" /></svg></button>
+      <button class="icon-btn" type="button" data-act="forward" aria-label="Forward" title="Forward"><svg><use href="#i-forward" /></svg></button>
+      <button class="icon-btn" type="button" data-act="reload" aria-label="Reload" title="Reload"><svg><use href="#i-reload" /></svg></button>
+      <button class="icon-btn" type="button" data-act="home" aria-label="Proxy home" title="Proxy home"><svg><use href="#i-home" /></svg></button>
+      <form class="address" id="addressForm" autocomplete="off">
+        <svg><use href="#i-lock" /></svg>
+        <input id="address" type="text" spellcheck="false" autocapitalize="off" enterkeyhint="go" aria-label="Address" />
+      </form>
+      <button class="icon-btn" type="button" data-act="full" aria-label="Full screen" title="Full screen"><svg><use href="#i-expand" /></svg></button>
+      <button class="icon-btn" type="button" data-act="close" aria-label="Close" title="Close"><svg><use href="#i-close" /></svg></button>
+    </div>
+    <div class="stage" id="browserStage">
+      <div class="progress" id="browserProgress"></div>
+      <div class="loading" id="browserLoading"><span class="spinner"></span><span id="browserLoadingText">Connecting…</span></div>
+      <div class="stage-error" id="browserError" hidden></div>
+    </div>
+  </div>
+
+  <!-- Settings -->
+  <dialog class="modal glass" id="settings" aria-labelledby="settingsTitle">
+    <form method="dialog">
+      <div class="modal-head">
+        <h3 id="settingsTitle">Settings</h3>
+        <button class="icon-btn" value="close" aria-label="Close"><svg><use href="#i-close" /></svg></button>
+      </div>
+      <label class="field">
+        <span>Proxy relay</span>
+        <select id="setRelay">
+          <option value="auto">Automatic (first one that answers)</option>
+          <option value="wss://wisp.mercurywork.shop/">Mercury Workshop</option>
+          <option value="wss://anura.pro/">Anura</option>
+          <option value="custom">Custom Wisp server…</option>
+        </select>
+      </label>
+      <label class="field" id="relayCustomField" hidden>
+        <span>Wisp server URL</span>
+        <input id="setRelayCustom" type="url" placeholder="wss://example.com/wisp/" spellcheck="false" />
+      </label>
+      <label class="field">
+        <span>Connection</span>
+        <select id="setTransport">
+          <option value="libcurl">libcurl.js (recommended)</option>
+          <option value="epoxy">Epoxy</option>
+        </select>
+      </label>
+      <label class="field">
+        <span>Search engine</span>
+        <select id="setEngine">
+          <option value="https://duckduckgo.com/?q=%s">DuckDuckGo</option>
+          <option value="https://www.google.com/search?q=%s">Google</option>
+          <option value="https://www.bing.com/search?q=%s">Bing</option>
+          <option value="https://search.brave.com/search?q=%s">Brave Search</option>
+        </select>
+      </label>
+      <div class="modal-actions">
+        <button class="btn ghost" type="button" id="resetProxy">Reset proxy data</button>
+        <button class="btn primary" value="save">Save</button>
+      </div>
+      <p class="fineprint">
+        The proxy runs on <a href="https://github.com/MercuryWorkshop/scramjet" target="_blank" rel="noopener">Scramjet</a>
+        and connects through a public <a href="https://github.com/MercuryWorkshop/wisp-protocol" target="_blank" rel="noopener">Wisp</a> relay;
+        pages are encrypted in your browser before they leave it. Games come from
+        <a href="https://sites.google.com/view/drive-u-7-home/home" target="_blank" rel="noopener">Drive U 7</a> and Poxel.io.
+      </p>
+    </form>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+</body>
+</html>

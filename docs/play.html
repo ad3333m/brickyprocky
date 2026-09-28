@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>BrickyProcky</title>
+  <style>
+    html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #07071a; }
+    #bp-msg {
+      position: fixed; inset: 0; z-index: 9;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px;
+      background: radial-gradient(circle at 50% 40%, #16133a, #07071a 70%);
+      color: rgba(226, 229, 255, 0.7); font: 500 15px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; text-align: center;
+    }
+    #bp-spin {
+      width: 42px; height: 42px; border-radius: 50%;
+      border: 3px solid rgba(255, 255, 255, 0.12); border-top-color: #22d3ee; border-right-color: #8b5cf6;
+      animation: bp-spin 0.8s linear infinite;
+    }
+    @keyframes bp-spin { to { transform: rotate(360deg); } }
+    ruffle-player { display: block; width: 100%; height: 100%; }
+  </style>
+</head>
+<body>
+  <div id="bp-msg"><div id="bp-spin"></div><div id="bp-text">Loading…</div></div>
+  <script>
+    // Game runner for BrickyProcky. Looks the game up in the catalog (so this
+    // page only ever runs games we list) and then:
+    //   doc - fetches the game's document and writes it into this page, the
+    //         same way the original embed does
+    //   swf - plays the Flash file with Ruffle
+    // Everything is inside one function so the game gets a clean global scope.
+    (function () {
+      var RUFFLE = "https://cdn.jsdelivr.net/npm/@ruffle-rs/ruffle@0.6.0/ruffle.js";
+      var id = new URLSearchParams(location.search).get("id");
+      var text = document.getElementById("bp-text");
+
+      function fail(message) {
+        var spin = document.getElementById("bp-spin");
+        if (spin) spin.remove();
+        text.textContent = message;
+      }
+
+      function playFlash(game) {
+        window.RufflePlayer = window.RufflePlayer || {};
+        window.RufflePlayer.config = {
+          publicPath: RUFFLE.replace(/ruffle\.js$/, ""),
+          autoplay: "on",
+          unmuteOverlay: "visible",
+          letterbox: "on",
+          splashScreen: false,
+          backgroundColor: "#000000",
+          allowFullscreen: true,
+        };
+        var script = document.createElement("script");
+        script.src = RUFFLE;
+        script.onload = function () {
+          var player = window.RufflePlayer.newest().createPlayer();
+          document.body.appendChild(player);
+          Promise.resolve(player.load({ url: game.src })).then(
+            function () { document.getElementById("bp-msg").remove(); player.focus(); },
+            function () { fail("The Flash player couldn't start this game."); }
+          );
+        };
+        script.onerror = function () { fail("Couldn't load the Flash player. Check your connection and try again."); };
+        document.head.appendChild(script);
+      }
+
+      fetch("games/catalog.json")
+        .then(function (res) { return res.json(); })
+        .then(function (data) {
+          var game = null;
+          for (var i = 0; i < data.games.length; i++) if (data.games[i].id === id) game = data.games[i];
+          if (!game) return fail("That game isn't in the BrickyProcky catalog.");
+          document.title = game.name;
+          text.textContent = "Loading " + game.name + "…";
+
+          if (game.type === "swf") return playFlash(game);
+          if (game.type !== "doc") return location.replace(game.src);
+
+          return fetch(game.src)
+            .then(function (res) {
+              if (!res.ok) throw new Error("HTTP " + res.status);
+              return res.text();
+            })
+            .then(function (html) {
+              // The documents are Google Gadget XML with the page in a CDATA block.
+              // Written as-is (like the original embed) the page renders the same,
+              // but the closing "]]>" shows up as text, so drop the closing wrapper.
+              html = html.replace(/\]\]>\s*<\/Content>\s*<\/Module>\s*$/i, "");
+              document.open();
+              document.write(html);
+              document.close();
+            });
+        })
+        .catch(function () { fail("This game couldn't be loaded. Check your connection and try again."); });
+    })();
+  </script>
+</body>
+</html>

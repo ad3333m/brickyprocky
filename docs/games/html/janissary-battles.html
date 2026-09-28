@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Oyun Başlatıcı</title>
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      height: 100%;
+      background: #000;
+    }
+    .play-button {
+      display: inline-block;
+      padding: 20px 40px;
+      background-color: #000000;
+      color: #ffffff !important;
+      border: 2px solid #4a148c;
+      border-radius: 10px;
+      font-family: Arial, sans-serif;
+      font-size: 24px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none !important;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 1001;
+      user-select: none;
+    }
+    .play-button:hover {
+      background-color: #4a148c !important;
+      transform: translate(-50%, -50%) scale(1.05);
+    }
+    .fullscreen-button {
+      display: inline-block;
+      padding: 10px 15px;
+      background-color: #000000;
+      color: #ffffff !important;
+      border: 2px solid #4a148c;
+      border-radius: 5px;
+      font-family: Arial, sans-serif;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none !important;
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 1002;
+      user-select: none;
+    }
+    .fullscreen-button:hover {
+      background-color: #4a148c !important;
+      transform: scale(1.05);
+    }
+    .content-container {
+      display: none;
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      margin: 0;
+      padding: 0;
+      border: none;
+      overflow: hidden;
+      z-index: 1000;
+      background-color: #000;
+    }
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: 0;
+      margin: 0;
+      padding: 0;
+      display: block;
+      background: #000;
+    }
+  </style>
+</head>
+<body>
+  <a id="playButton" class="play-button">CLICK TO PLAY</a>
+  <a id="fullscreenButton" class="fullscreen-button">FULLSCREEN</a>
+  <div id="contentContainer" class="content-container"></div>
+
+  <script>
+    const gameHTML = '<!DOCTYPE html>\n<html>\n<head>\n<meta charset="UTF-8">\n<base href="https://cdn.jsdelivr.net/gh/yrgen73/janibatt@2be2779d6614a2a81660ba5a02fdded10d3ec337/">\n<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no">\n<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/yrgen73/janibatt@2be2779d6614a2a81660ba5a02fdded10d3ec337/style.css" type="text/css">\n\n<script>\n/* Keyboard fix */\nwindow.addEventListener("keydown", function(e) {\n  if ([32, 37, 38, 39, 40].indexOf(e.keyCode) > -1) e.preventDefault();\n}, false);\n\n/* Ad SDK fallbacks: prevents Construct 3 runtime from crashing when ad SDK is missing */\n(function () {\n  const done = function () { return Promise.resolve({ completed: true }); };\n  const noop = function () { return undefined; };\n\n  window.gdsdk = window.gdsdk || {\n    showAd: done,\n    preloadAd: done,\n    showBanner: done,\n    hideBanner: noop,\n    cancelAd: noop\n  };\n\n  window.PokiSDK = window.PokiSDK || {\n    init: done,\n    commercialBreak: done,\n    rewardedBreak: done,\n    gameplayStart: noop,\n    gameplayStop: noop,\n    happyTime: noop,\n    setDebug: noop\n  };\n\n  window.CrazyGames = window.CrazyGames || {};\n  window.CrazyGames.SDK = window.CrazyGames.SDK || {\n    init: done,\n    ad: {\n      requestAd: function () { return done(); },\n      hasAdblock: function () { return Promise.resolve(false); }\n    },\n    game: {\n      gameplayStart: noop,\n      gameplayStop: noop,\n      happytime: noop\n    },\n    user: {\n      getUser: function () { return Promise.resolve(null); }\n    }\n  };\n\n  window.GameMonetize = window.GameMonetize || {\n    SDK_OPTIONS: {\n      gameId: "",\n      onEvent: noop\n    }\n  };\n\n  window.SDK_OPTIONS = window.SDK_OPTIONS || {\n    gameId: "",\n    onEvent: noop\n  };\n\n  window.YaGames = window.YaGames || {\n    init: function () {\n      return Promise.resolve({\n        adv: {\n          showFullscreenAdv: function (o) {\n            if (o && o.callbacks && typeof o.callbacks.onClose === "function") o.callbacks.onClose();\n            return Promise.resolve();\n          },\n          showRewardedVideo: function (o) {\n            if (o && o.callbacks && typeof o.callbacks.onRewarded === "function") o.callbacks.onRewarded();\n            if (o && o.callbacks && typeof o.callbacks.onClose === "function") o.callbacks.onClose();\n            return Promise.resolve();\n          }\n        },\n        getPlayer: function () { return Promise.resolve({ getMode: function () { return "lite"; } }); },\n        getLeaderboards: function () { return Promise.resolve(null); }\n      });\n    }\n  };\n\n  window.addEventListener("unhandledrejection", function (event) {\n    const msg = String(event.reason && (event.reason.message || event.reason) || "");\n    if (msg.indexOf("showAd") !== -1 || msg.indexOf("advert") !== -1 || msg.indexOf("SDK") !== -1) {\n      event.preventDefault();\n      console.warn("Ad SDK fallback handled:", msg);\n    }\n  });\n\n  window.addEventListener("error", function (event) {\n    const msg = String(event.message || "");\n    if (msg.indexOf("showAd") !== -1 || msg.indexOf("advert") !== -1 || msg.indexOf("SDK") !== -1) {\n      event.preventDefault();\n      console.warn("Ad SDK error ignored:", msg);\n      return true;\n    }\n  }, true);\n})();\n</script>\n</head>\n<body>\n<div id="fb-root"></div>\n<script src="https://cdn.jsdelivr.net/gh/yrgen73/janibatt@2be2779d6614a2a81660ba5a02fdded10d3ec337/box2d.wasm.js"></script>\n<noscript>\n  <div id="notSupportedWrap">\n    <h2 id="notSupportedTitle">This content requires JavaScript</h2>\n    <p class="notSupportedMessage">JavaScript appears to be disabled. Please enable it to view this content.</p>\n    <p class="notSupportedMessage">This content was made with Construct.</p>\n  </div>\n</noscript>\n<script src="https://cdn.jsdelivr.net/gh/yrgen73/janibatt@2be2779d6614a2a81660ba5a02fdded10d3ec337/scripts/supportcheck.js"></script>\n<script src="https://cdn.jsdelivr.net/gh/yrgen73/janibatt@2be2779d6614a2a81660ba5a02fdded10d3ec337/scripts/offlineclient.js"></script>\n<script src="https://cdn.jsdelivr.net/gh/yrgen73/janibatt@2be2779d6614a2a81660ba5a02fdded10d3ec337/scripts/main.js"></script>\n<!-- register-sw.js removed intentionally: service workers do not work reliably inside embedded/srcdoc pages. -->\n</body>\n</html>';
+
+    document.addEventListener('DOMContentLoaded', function() {
+      const playButton = document.getElementById('playButton');
+      const fullscreenButton = document.getElementById('fullscreenButton');
+      playButton.addEventListener('click', showContent);
+      fullscreenButton.addEventListener('click', openFullscreen);
+    });
+
+    function showContent() {
+      const playButton = document.getElementById('playButton');
+      const container = document.getElementById('contentContainer');
+
+      playButton.style.display = 'none';
+      container.style.display = 'block';
+      container.innerHTML = '';
+
+      const iframe = document.createElement('iframe');
+      iframe.setAttribute('allow', 'autoplay; fullscreen; gamepad; xr-spatial-tracking; clipboard-read; clipboard-write');
+      iframe.setAttribute('allowfullscreen', 'true');
+      iframe.srcdoc = gameHTML;
+      iframe.onload = () => console.log('Oyun yüklendi');
+      iframe.onerror = (e) => console.error('Oyun yüklenirken hata:', e);
+
+      container.appendChild(iframe);
+    }
+
+    function openFullscreen() {
+      const container = document.getElementById('contentContainer');
+      if (container.style.display !== 'block') showContent();
+
+      const iframe = container.querySelector('iframe');
+      if (iframe && iframe.requestFullscreen) {
+        iframe.requestFullscreen().catch(() => {});
+        return;
+      }
+
+      const newWin = window.open("about:blank", "_blank");
+      if (!newWin) {
+        alert("Yeni sekme açma engellendi. Lütfen tarayıcı ayarlarını kontrol edin.");
+        return;
+      }
+      newWin.document.open();
+      newWin.document.write(gameHTML);
+      newWin.document.close();
+    }
+  </script>
+</body>
+</html>

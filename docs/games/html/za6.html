@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8"/>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
+<title>Fortzone Battle Royale</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/familiapablo/re4gl@main/TemplateData/style.css"/>
+
+<script>
+/* ============================================================
+   EPONESH BYPASS  (okul ağı / kapalı domain çözümü)
+   ----------------------------------------------------------------
+   gamepush.js içinde HARDCODED url listesi var:
+       https://api.eponesh.com/gs/api    (race öncelikli)
+       https://apip.eponesh.com/gs/api
+       wss://ws.eponesh.com/connection/websocket
+       https://eponesh.com/games/api/...
+       https://eponesh.com/sdk/static/...
+   Bu script gamepush.js YÜKLENMEDEN önce window.fetch ve
+   window.WebSocket'i sarıp tüm eponesh trafiğini gamepush.com'a
+   yönlendirir. ws.gamepush.com belirsiz olduğundan WebSocket'i
+   "fake closed" yapıyoruz → centrifuge offline moda düşer,
+   ana SDK akışı devam eder.
+   ============================================================ */
+(function(){
+  const remap = function(url){
+    if (typeof url !== 'string') return url;
+    return url
+      .replace(/api\.eponesh\.com/g,  'api.gamepush.com')
+      .replace(/apip\.eponesh\.com/g, 'apip.gamepush.com')
+      .replace(/\/\/eponesh\.com\//g, '//gamepush.com/');
+  };
+
+  /* 1) fetch hijack — ping, graphql, status, sendShowAdsInfo */
+  const origFetch = window.fetch.bind(window);
+  window.fetch = function(input, init){
+    try {
+      if (typeof input === 'string') {
+        input = remap(input);
+      } else if (input && typeof input.url === 'string') {
+        input = new Request(remap(input.url), input);
+      }
+    } catch(e) {}
+    return origFetch(input, init);
+  };
+
+  /* 2) WebSocket hijack — ws.eponesh.com & ws.gamepush.com fake closed */
+  const OrigWS = window.WebSocket;
+  function FakeWS(url, protocols){
+    const isBlocked = typeof url === 'string' &&
+                      /eponesh\.com|ws\.gamepush\.com/i.test(url);
+    if (!isBlocked) {
+      return new OrigWS(url, protocols);
+    }
+    /* Fake closed socket — centrifuge "offline" akışına geçer */
+    const ws = {
+      url: url,
+      protocol: '',
+      extensions: '',
+      bufferedAmount: 0,
+      readyState: 3,                    /* CLOSED */
+      binaryType: 'blob',
+      onopen: null, onclose: null, onerror: null, onmessage: null,
+      send: function(){},
+      close: function(){},
+      addEventListener: function(t, f){ this['on' + t] = f; },
+      removeEventListener: function(t){ this['on' + t] = null; },
+      dispatchEvent: function(){ return false; }
+    };
+    setTimeout(function(){
+      if (ws.onerror) ws.onerror({ type:'error', target: ws });
+      if (ws.onclose) ws.onclose({
+        type:'close', code:1006, reason:'blocked', wasClean:false, target: ws
+      });
+    }, 0);
+    return ws;
+  }
+  FakeWS.prototype  = OrigWS.prototype;
+  FakeWS.CONNECTING = 0;
+  FakeWS.OPEN       = 1;
+  FakeWS.CLOSING    = 2;
+  FakeWS.CLOSED     = 3;
+  window.WebSocket  = FakeWS;
+
+  /* 3) <img>/<link> src/href remap — sdk ikonları (reward.png, trophy.svg) */
+  const origSetAttr = Element.prototype.setAttribute;
+  Element.prototype.setAttribute = function(name, value){
+    if ((name === 'src' || name === 'href') && typeof value === 'string') {
+      value = remap(value);
+    }
+    return origSetAttr.call(this, name, value);
+  };
+})();
+
+/* ============================================================
+   GAMEPUSH BOOT CFG  (bizim CDN'den indirsin)
+   ============================================================ */
+window.__GS_BOOT_CFG__ = {
+  sdkSrc: 'https://cdn.jsdelivr.net/gh/familiapablo/re4gl@main/TemplateData/gp_bundle/gamepush.js'
+};
+
+/* ============================================================
+   IndexedDB fast-fail mock — %11 donma önlemi
+   ============================================================ */
+(function() {
+  function fakeReq() {
+    var r = { readyState:'pending', result:null, error:null,
+              onsuccess:null, onerror:null, onupgradeneeded:null, onblocked:null };
+    setTimeout(function(){
+      r.readyState = 'done';
+      r.error = { name:'NotSupportedError', message:'stub' };
+      if (r.onerror) r.onerror({ type:'error', target:r });
+    }, 0);
+    return r;
+  }
+  var m = {
+    open:           function(){ return fakeReq(); },
+    deleteDatabase: function(){ var r={onsuccess:null}; setTimeout(function(){ if(r.onsuccess) r.onsuccess({}); },0); return r; },
+    cmp:            function(a,b){ return a<b?-1:a>b?1:0; }
+  };
+  try {
+    ['indexedDB','mozIndexedDB','webkitIndexedDB','msIndexedDB'].forEach(function(k){
+      Object.defineProperty(window, k, { get:function(){ return m; }, configurable:true });
+    });
+    Object.defineProperty(window, 'caches', { get:function(){ return undefined; }, configurable:true });
+  } catch(e) { window.indexedDB = m; }
+})();
+
+const overlayBackgroundColor     = "#555555";
+const progressBarFillColor       = "#f76426";
+const progressBarBackgroundColor = "#000000";
+const progressBarBorderColor     = "#000000";
+</script>
+</head>
+<body class="light">
+<div id="unity-container" class="unity-desktop">
+  <canvas id="unity-canvas"></canvas>
+</div>
+<div id="loading-cover" style="display:none;">
+  <div id="unity-loading-bar">
+    <div id="unity-logo">
+      <img src="https://cdn.jsdelivr.net/gh/familiapablo/re4gl@main/logo.png"/>
+    </div>
+    <div id="unity-progress-bar-empty" style="display:none;">
+      <div id="unity-progress-bar-full"></div>
+    </div>
+    <div class="spinner"></div>
+  </div>
+</div>
+
+<script>
+const buildUrl  = "https://cdn.jsdelivr.net/gh/familiapablo/re4gl@main/Build";
+const loaderUrl = buildUrl + "/FortzoneWebGL109.loader.js";
+
+const config = {
+  dataUrl:            null,
+  frameworkUrl:       buildUrl + "/FortzoneWebGL109.framework.js.unityweb",
+  codeUrl:            buildUrl + "/FortzoneWebGL109.wasm.unityweb",
+  streamingAssetsUrl: "https://cdn.jsdelivr.net/gh/familiapablo/re4gl@main/StreamingAssets",
+  companyName:        "Fahrenheit Dev",
+  productName:        "Fortzone Battle Royale",
+  productVersion:     "0.8.8",
+  cacheControl:       function() { return "no-store"; }
+};
+
+const container        = document.querySelector("#unity-container");
+const canvas           = document.querySelector("#unity-canvas");
+const loadingCover     = document.querySelector("#loading-cover");
+const progressBarEmpty = document.querySelector("#unity-progress-bar-empty");
+const progressBarFull  = document.querySelector("#unity-progress-bar-full");
+const spinner          = document.querySelector('.spinner');
+
+if (overlayBackgroundColor)     canvas.style.background           = overlayBackgroundColor;
+if (progressBarFillColor)       progressBarFull.style.background   = progressBarFillColor;
+if (progressBarBackgroundColor) progressBarEmpty.style.background  = progressBarBackgroundColor;
+
+if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent))
+  container.className = "unity-mobile";
+
+loadingCover.style.display = "";
+
+async function fetchParts() {
+  const parts = [];
+  for (let i = 1; i <= 4; i++) {
+    const r = await fetch(buildUrl + `/FortzoneWebGL109.data_part${i}.unityweb`);
+    if (!r.ok) throw new Error(`Part ${i} HTTP ${r.status}`);
+    parts.push(new Uint8Array(await r.arrayBuffer()));
+  }
+  const total = parts.reduce((s, p) => s + p.length, 0);
+  const merged = new Uint8Array(total);
+  let off = 0;
+  for (const p of parts) { merged.set(p, off); off += p.length; }
+  return merged;
+}
+
+const unityLoader = document.createElement("script");
+unityLoader.src = loaderUrl;
+unityLoader.onload = async () => {
+  try {
+    const merged   = await fetchParts();
+    const blob     = new Blob([merged], { type: 'application/octet-stream' });
+    config.dataUrl = URL.createObjectURL(blob) + '#FortzoneWebGL109.data.unityweb';
+  } catch(e) { alert("Data error: " + e.message); return; }
+
+  createUnityInstance(canvas, config, (progress) => {
+    spinner.style.display          = "none";
+    progressBarEmpty.style.display = "";
+    progressBarFull.style.width    = `${100 * progress}%`;
+  }).then((inst) => {
+    window.unityInstance = inst;
+    loadingCover.style.display = "none";
+  }).catch(alert);
+};
+document.body.appendChild(unityLoader);
+
+document.addEventListener("pointerdown", () => { container.focus(); window.focus(); canvas.focus(); });
+</script>
+</body>
+</html>

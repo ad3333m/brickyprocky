@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="bp-fill" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#b69cff"/>
+      <stop offset=".48" stop-color="#7c3aed"/>
+      <stop offset="1" stop-color="#06b6d4"/>
+    </linearGradient>
+    <linearGradient id="bp-sheen" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff" stop-opacity=".42"/>
+      <stop offset=".55" stop-color="#fff" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <rect x="2" y="2" width="60" height="60" rx="18" fill="url(#bp-fill)"/>
+  <rect x="2" y="2" width="60" height="60" rx="18" fill="url(#bp-sheen)"/>
+  <rect x="2.75" y="2.75" width="58.5" height="58.5" rx="17.25" fill="none" stroke="#fff" stroke-opacity=".28" stroke-width="1.5"/>
+  <g fill="#fff">
+    <rect x="12" y="16" width="19" height="8.5" rx="2.6" opacity=".96"/>
+    <rect x="33" y="16" width="19" height="8.5" rx="2.6" opacity=".68"/>
+    <rect x="12" y="27.75" width="8.5" height="8.5" rx="2.6" opacity=".5"/>
+    <rect x="22.5" y="27.75" width="19" height="8.5" rx="2.6" opacity=".96"/>
+    <rect x="43.5" y="27.75" width="8.5" height="8.5" rx="2.6" opacity=".5"/>
+    <rect x="12" y="39.5" width="19" height="8.5" rx="2.6" opacity=".68"/>
+    <rect x="33" y="39.5" width="19" height="8.5" rx="2.6" opacity=".96"/>
+  </g>
+</svg>

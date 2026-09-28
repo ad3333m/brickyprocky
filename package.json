@@ -1,0 +1,22 @@
+{
+  "name": "brickyprocky",
+  "version": "1.0.0",
+  "private": true,
+  "description": "BrickyProcky - games and a web proxy in one glassy site",
+  "type": "module",
+  "scripts": {
+    "vendor": "node tools/vendor.js",
+    "catalog": "node tools/build-catalog.js",
+    "serve": "node tools/serve.js"
+  },
+  "dependencies": {
+    "@mercuryworkshop/bare-mux": "2.1.9",
+    "@mercuryworkshop/epoxy-transport": "2.1.28",
+    "@mercuryworkshop/libcurl-transport": "1.5.2",
+    "@mercuryworkshop/scramjet": "1.1.0",
+    "@mercuryworkshop/wisp-js": "0.5.0"
+  },
+  "devDependencies": {
+    "puppeteer-core": "^24.43.1"
+  }
+}
