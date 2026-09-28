@@ -4,7 +4,9 @@
 // keeps whichever has more going on; all-black loading screens are dropped.
 //
 // Needs the local preview running (node tools/serve.js 8093) and Edge or Chrome.
-// Usage: node tools/snap-covers.js [preview origin]
+// Usage: node tools/snap-covers.js [preview origin] [--wait=seconds] [--ids=a,b,c]
+//   --wait  how long to let a game load before the first shot (default 10)
+//   --ids   retake these games even if they already have a cover
 
 import fs from "node:fs";
 import path from "node:path";
@@ -16,7 +18,11 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const GAMES = path.join(ROOT, "docs", "games");
 const CATALOG = path.join(GAMES, "catalog.json");
 const SNAPS = path.join(ROOT, ".cache", "snaps");
-const ORIGIN = process.argv[2] || "http://localhost:8093";
+const cli = process.argv.slice(2);
+const option = (name) => (cli.find((a) => a.startsWith(`--${name}=`)) || "").split("=")[1] || "";
+const ORIGIN = cli.find((a) => !a.startsWith("--")) || "http://localhost:8093";
+const WAIT = (Number(option("wait")) || 10) * 1000;
+const RETAKE = new Set(option("ids").split(",").filter(Boolean));
 const BROWSERS = [
   "C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe",
   "C:/Program Files/Google/Chrome/Application/chrome.exe",
@@ -50,7 +56,7 @@ async function snap(browser, game) {
     page.on("dialog", (d) => d.dismiss().catch(() => {}));
     page.setDefaultNavigationTimeout(45000);
     await within(page.goto(gameUrl(game), { waitUntil: "load" }).catch(() => {}), 50000, "loading");
-    await sleep(game.type === "swf" ? 7000 : 10000);
+    await sleep(game.type === "swf" ? Math.min(WAIT, 7000) : WAIT);
     await within(page.screenshot({ path: first }), 20000, "first screenshot");
     await page.mouse.click(WIDTH / 2, HEIGHT / 2).catch(() => {});
     await sleep(5000);
@@ -76,10 +82,11 @@ function launch() {
 
 async function main() {
   const catalog = JSON.parse(fs.readFileSync(CATALOG, "utf8"));
-  const todo = catalog.games.filter((g) => !g.thumb);
+  const todo = catalog.games.filter((g) => !g.thumb || RETAKE.has(g.id));
   console.log(`${todo.length} games to screenshot`);
   if (!todo.length) return;
   fs.mkdirSync(SNAPS, { recursive: true });
+  for (const id of RETAKE) for (const f of [`${id}.a.png`, `${id}.b.png`]) fs.rmSync(path.join(SNAPS, f), { force: true });
 
   // One browser per worker, relaunched if a game crashes it.
   const jobs = [];
@@ -89,6 +96,12 @@ async function main() {
     Array.from({ length: PARALLEL }, async () => {
       let browser = null;
       while (queue.length) {
+        const cached = [`${queue[0].id}.a.png`, `${queue[0].id}.b.png`].map((f) => path.join(SNAPS, f));
+        if (cached.every((f) => fs.existsSync(f))) {
+          jobs.push({ from: cached, to: path.join(GAMES, "thumbs", queue.shift().id + ".webp") });
+          done++;
+          continue;
+        }
         if (!browser || !browser.connected) {
           browser?.process()?.kill();
           browser = await launch();
@@ -121,6 +134,14 @@ async function main() {
   fs.writeFileSync(CATALOG, JSON.stringify(catalog));
   console.log(`${added} covers from screenshots, ${catalog.games.filter((g) => !g.thumb).length} games still without one`);
 }
+
+// Windows keeps the throwaway browser profile locked for a moment after exit,
+// so puppeteer's cleanup can fail; that's harmless.
+process.on("unhandledRejection", (err) => {
+  if (err?.code === "EPERM" || err?.code === "EBUSY") return;
+  console.error(err);
+  process.exitCode = 1;
+});
 
 main().catch((err) => {
   console.error(err);

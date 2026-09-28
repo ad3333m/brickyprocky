@@ -40,7 +40,9 @@ const EXTRA = [
     id: "poxel-io",
     name: "Poxel.io",
     type: "frame",
-    src: "https://poxel.io/",
+    // ?cg makes Poxel.io use its CrazyGames ad SDK, which shows nothing when the
+    // game isn't on crazygames.com, so it plays without the pre-rolls and banners.
+    src: "https://poxel.io/?cg",
     cover: "https://poxel.io/background-og.webp",
     tags: ["Shooter", ".io", "Multiplayer"],
     blurb: "Fast voxel FPS with players from all over the world.",

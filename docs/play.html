@@ -20,15 +20,18 @@
     @keyframes bp-spin { to { transform: rotate(360deg); } }
     ruffle-player { display: block; width: 100%; height: 100%; }
   </style>
+  <script src="assets/adshield.js"></script>
 </head>
 <body>
   <div id="bp-msg"><div id="bp-spin"></div><div id="bp-text">Loading…</div></div>
   <script>
     // Game runner for BrickyProcky. Looks the game up in the catalog (so this
     // page only ever runs games we list) and then:
-    //   doc - fetches the game's document and writes it into this page, the
-    //         same way the original embed does
-    //   swf - plays the Flash file with Ruffle
+    //   doc  - fetches the game's document and writes it into this page, the
+    //          same way the original embed does
+    //   html - the same, for games saved in games/html/
+    //   swf  - plays the Flash file with Ruffle
+    // assets/adshield.js is already running, so ads are blocked in all three.
     // Everything is inside one function so the game gets a clean global scope.
     (function () {
       var RUFFLE = "https://cdn.jsdelivr.net/npm/@ruffle-rs/ruffle@0.6.0/ruffle.js";
@@ -76,7 +79,7 @@
           text.textContent = "Loading " + game.name + "…";
 
           if (game.type === "swf") return playFlash(game);
-          if (game.type !== "doc") return location.replace(game.src);
+          if (game.type !== "doc" && game.type !== "html") return location.replace(game.src);
 
           return fetch(game.src)
             .then(function (res) {
@@ -84,13 +87,15 @@
               return res.text();
             })
             .then(function (html) {
-              // The documents are Google Gadget XML with the page in a CDATA block.
+              // The doc files are Google Gadget XML with the page in a CDATA block.
               // Written as-is (like the original embed) the page renders the same,
               // but the closing "]]>" shows up as text, so drop the closing wrapper.
               html = html.replace(/\]\]>\s*<\/Content>\s*<\/Module>\s*$/i, "");
+              html = window.BrickyShield ? window.BrickyShield.clean(html) : html;
               document.open();
               document.write(html);
               document.close();
+              if (window.BrickyShield) window.BrickyShield.watch();
             });
         })
         .catch(function () { fail("This game couldn't be loaded. Check your connection and try again."); });

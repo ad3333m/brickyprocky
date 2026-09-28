@@ -17,6 +17,7 @@ It's a static site (everything is in `docs/`), served by GitHub Pages from the
 |---|---|
 | Games | `docs/games/catalog.json` lists every game and how it loads. `doc` games are a Google Gadget XML document on jsDelivr that `play.html` writes into its own page, exactly as the original embed did. `swf` games play in [Ruffle](https://ruffle.rs). `frame` games (Apps Script web apps, Scratch, Poxel.io) are framed directly. `html` games are saved in `docs/games/html/`. |
 | Covers | From the Drive U 7 listings where they exist; otherwise CrazyGames, Poki, the Flashpoint archive, Steam or Scratch by title; otherwise a screenshot of the game itself. |
+| Ad blocking | `play.html` loads `assets/adshield.js` before the game: requests to ad and tracking servers fail (the way a browser ad blocker makes them fail, so game SDKs skip the ad), pop-ups are refused, and the "Close (12)" banner many uploads carry is switched off. Poxel.io is framed as `poxel.io/?cg`, its CrazyGames mode, whose ad SDK shows nothing off crazygames.com. Apps Script and Scratch games are other sites' pages, so the shield can't reach inside them. |
 | Proxy | [Scramjet](https://github.com/MercuryWorkshop/scramjet) in a service worker (`docs/sw.js`, everything under `go/`), with [bare-mux](https://github.com/MercuryWorkshop/bare-mux) and the libcurl.js or Epoxy transport. Pages are TLS-encrypted in the browser and tunnelled over a public [Wisp](https://github.com/MercuryWorkshop/wisp-protocol) relay (Mercury Workshop or Anura; Settings can point it at your own). |
 
 ## Updating

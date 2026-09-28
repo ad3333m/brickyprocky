@@ -368,8 +368,9 @@
     frame.title = g.name;
     frame.allow = "autoplay; fullscreen; gamepad; pointer-lock; keyboard-map; clipboard-read; clipboard-write; screen-wake-lock";
     frame.allowFullscreen = true;
-    // doc and swf games go through the runner page; the rest can be framed as-is.
-    frame.src = g.type === "doc" || g.type === "swf" ? `play.html?id=${encodeURIComponent(g.id)}` : g.src;
+    // Games we load ourselves go through the runner page, which blocks their ads;
+    // other sites' games (Apps Script, Scratch, Poxel.io) are framed as they are.
+    frame.src = g.type === "frame" ? g.src : `play.html?id=${encodeURIComponent(g.id)}`;
 
     let revealed = false;
     const reveal = () => {
