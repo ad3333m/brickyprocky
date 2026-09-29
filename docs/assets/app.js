@@ -538,6 +538,37 @@
     location.hash = "#/browse/" + encodeURIComponent(url);
   }
 
+  // ------------------------------------------------------------------ panic screen
+  // Ctrl+1 drops a decoy "new tab" page over everything; Ctrl+2 or Escape lifts it.
+  // The browser tab's title and icon are swapped too, so a glance at the tab strip
+  // shows "New Tab", not BrickyProcky.
+  const BLANK_ICON =
+    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='11' fill='%23e8eaed'/%3E%3C/svg%3E";
+  let decoyOn = false;
+  let savedTitle = "";
+  let savedIcon = null;
+
+  function showDecoy() {
+    if (decoyOn) return;
+    decoyOn = true;
+    $("#newtab").hidden = false;
+    savedTitle = document.title;
+    document.title = "New Tab";
+    const icon = document.querySelector("link[rel~='icon']");
+    if (icon) { savedIcon = icon.getAttribute("href"); icon.setAttribute("href", BLANK_ICON); }
+    const input = $("#ntSearch input");
+    if (input) { input.value = ""; try { input.focus(); } catch { /* focus can throw when hidden */ } }
+  }
+
+  function hideDecoy() {
+    if (!decoyOn) return;
+    decoyOn = false;
+    $("#newtab").hidden = true;
+    document.title = savedTitle || "BrickyProcky";
+    const icon = document.querySelector("link[rel~='icon']");
+    if (icon && savedIcon != null) icon.setAttribute("href", savedIcon);
+  }
+
   // ------------------------------------------------------------------ browser
 
   let browsing = false;
@@ -736,6 +767,22 @@
 
     document.addEventListener("keydown", (e) => {
       const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement?.tagName);
+      // Ctrl+1 shows the decoy new-tab screen, Ctrl+2 hides it. Backtick toggles
+      // it too, as a fallback where the browser keeps Ctrl+1/Ctrl+2 for switching
+      // tabs; Escape also closes it.
+      if (e.ctrlKey && !e.altKey && !e.metaKey) {
+        if (e.key === "1" || e.code === "Digit1") { e.preventDefault(); showDecoy(); return; }
+        if (e.key === "2" || e.code === "Digit2") { e.preventDefault(); hideDecoy(); return; }
+      }
+      if ((e.key === "`" || e.code === "Backquote") && (!typing || decoyOn)) {
+        e.preventDefault();
+        if (decoyOn) hideDecoy(); else showDecoy();
+        return;
+      }
+      if (decoyOn) {
+        if (e.key === "Escape") { e.preventDefault(); hideDecoy(); }
+        return;
+      }
       if (e.key === "/" && !typing && currentView === "games" && !playingId) {
         e.preventDefault();
         search.focus();
@@ -744,6 +791,21 @@
         if (playingId) leave(playerCameFrom, "#/games");
         else if (browsing) leave(browserCameFrom, "#/proxy");
       }
+    });
+
+    // The decoy's search box and shortcut tiles open through the proxy.
+    $("#ntSearch").addEventListener("submit", (e) => {
+      e.preventDefault();
+      const value = $("#ntSearch input").value.trim();
+      hideDecoy();
+      if (value) openInProxy(toUrl(value));
+    });
+    $("#newtab").addEventListener("click", (e) => {
+      const tile = e.target.closest("[data-nt-url]");
+      if (!tile) return;
+      e.preventDefault();
+      hideDecoy();
+      openInProxy(tile.dataset.ntUrl);
     });
 
     $("#player").addEventListener("click", (e) => {

@@ -167,6 +167,37 @@
     </div>
   </div>
 
+  <!-- Panic screen: a plain, unbranded start page. Ctrl+1 shows it, Ctrl+2 (or Esc) hides it. -->
+  <div class="newtab" id="newtab" hidden>
+    <div class="nt-top">
+      <button class="nt-icon" type="button" tabindex="-1" aria-label="Apps">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="#5f6368"><circle cx="5" cy="5" r="2"/><circle cx="12" cy="5" r="2"/><circle cx="19" cy="5" r="2"/><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/><circle cx="5" cy="19" r="2"/><circle cx="12" cy="19" r="2"/><circle cx="19" cy="19" r="2"/></svg>
+      </button>
+      <span class="nt-avatar" aria-hidden="true">A</span>
+    </div>
+    <div class="nt-body">
+      <div class="nt-logo" aria-hidden="true">
+        <svg width="60" height="60" viewBox="0 0 64 64">
+          <defs><linearGradient id="nt-mark" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5b8def"/><stop offset="1" stop-color="#22c1c3"/></linearGradient></defs>
+          <rect x="6" y="6" width="52" height="52" rx="16" fill="url(#nt-mark)"/>
+          <circle cx="32" cy="32" r="11" fill="#fff"/>
+        </svg>
+      </div>
+      <form class="nt-search" id="ntSearch" autocomplete="off">
+        <svg class="nt-s-ico" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#9aa0a6" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3" stroke-linecap="round"/></svg>
+        <input type="text" spellcheck="false" autocapitalize="off" enterkeyhint="go" aria-label="Search the web" placeholder="Search the web" />
+      </form>
+      <div class="nt-shortcuts">
+        <a class="nt-tile" href="#" data-nt-url="https://mail.google.com/" tabindex="-1"><span class="nt-mono">M</span><span class="nt-name">Mail</span></a>
+        <a class="nt-tile" href="#" data-nt-url="https://drive.google.com/" tabindex="-1"><span class="nt-mono">D</span><span class="nt-name">Drive</span></a>
+        <a class="nt-tile" href="#" data-nt-url="https://docs.google.com/" tabindex="-1"><span class="nt-mono">D</span><span class="nt-name">Docs</span></a>
+        <a class="nt-tile" href="#" data-nt-url="https://calendar.google.com/" tabindex="-1"><span class="nt-mono">C</span><span class="nt-name">Calendar</span></a>
+        <a class="nt-tile" href="#" data-nt-url="https://classroom.google.com/" tabindex="-1"><span class="nt-mono">C</span><span class="nt-name">Classroom</span></a>
+        <a class="nt-tile" href="#" data-nt-url="https://www.google.com/" tabindex="-1"><span class="nt-mono">S</span><span class="nt-name">Search</span></a>
+      </div>
+    </div>
+  </div>
+
   <!-- Settings -->
   <dialog class="modal glass" id="settings" aria-labelledby="settingsTitle">
     <form method="dialog">
