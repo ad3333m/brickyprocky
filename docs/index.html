@@ -196,6 +196,7 @@
         <a class="nt-tile" href="#" data-nt-url="https://www.google.com/" tabindex="-1"><span class="nt-mono">S</span><span class="nt-name">Search</span></a>
       </div>
     </div>
+    <img class="nt-image" id="ntImage" alt="" hidden />
   </div>
 
   <!-- Settings -->
@@ -234,6 +235,15 @@
           <option value="https://search.brave.com/search?q=%s">Brave Search</option>
         </select>
       </label>
+      <div class="field">
+        <span>Hiding screen (Ctrl+1)</span>
+        <div class="hs-row">
+          <button class="btn" type="button" id="setDecoyPick">Choose image…</button>
+          <button class="btn ghost" type="button" id="setDecoyClear" hidden>Use default page</button>
+        </div>
+        <small class="hs-note" id="decoyNote">Showing the default start page.</small>
+        <input id="setDecoyFile" type="file" accept="image/*" hidden />
+      </div>
       <div class="modal-actions">
         <button class="btn ghost" type="button" id="resetProxy">Reset proxy data</button>
         <button class="btn primary" value="save">Save</button>

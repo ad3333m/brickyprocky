@@ -1046,3 +1046,17 @@ kbd {
   .nt-body { margin-top: 16vh; }
   .nt-shortcuts { max-width: 340px; }
 }
+/* A custom hiding-screen image, when set, covers the default start page. */
+.nt-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background: #fff;
+  z-index: 1;
+}
+/* Settings: hiding-screen controls */
+.hs-row { display: flex; flex-wrap: wrap; gap: 10px; }
+.hs-row .btn { height: 38px; padding: 0 14px; }
+.hs-note { color: var(--faint); font-size: 12px; }

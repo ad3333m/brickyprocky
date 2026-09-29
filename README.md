@@ -9,7 +9,9 @@ Games and a web proxy in one glassy site: **https://ad3333m.github.io/brickyproc
   Discord, YouTube, Spotify, TikTok, Twitch and Reddit.
 - **Panic key**: **Ctrl+1** drops a plain, unbranded start-page overlay over the app
   (and swaps the tab to "New Tab"); **Ctrl+2**, **Esc**, or the **`** key bring it back.
-  It can't intercept keys while a cross-origin game iframe holds focus.
+  It can't intercept keys while a cross-origin game iframe holds focus. Settings can
+  replace the start page with a **custom image** you upload — it's downscaled and kept
+  only in your own browser (localStorage), never uploaded anywhere.
 
 It's a static site (everything is in `docs/`), served by GitHub Pages from the
 `docs` folder of `main`.

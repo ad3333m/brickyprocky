@@ -569,6 +569,56 @@
     if (icon && savedIcon != null) icon.setAttribute("href", savedIcon);
   }
 
+  // Optional custom hiding-screen image, chosen by the viewer in Settings and
+  // kept only in their own browser (localStorage). When set it covers the
+  // default start page; otherwise the start page shows.
+  function storedDecoyImage() {
+    try { return localStorage.getItem("bp:decoyImage") || ""; } catch { return ""; }
+  }
+
+  function applyDecoyImage(dataUrl) {
+    const img = $("#ntImage");
+    if (dataUrl) { img.src = dataUrl; img.hidden = false; } else { img.removeAttribute("src"); img.hidden = true; }
+    const note = $("#decoyNote");
+    const clear = $("#setDecoyClear");
+    if (note) note.textContent = dataUrl ? "Showing your custom image." : "Showing the default start page.";
+    if (clear) clear.hidden = !dataUrl;
+  }
+
+  // Downscale the picked image and keep it small enough for localStorage.
+  function setDecoyImageFromFile(file) {
+    if (!file || !/^image\//.test(file.type)) { toast("Choose an image file."); return; }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const max = 1280;
+        const scale = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
+        const w = Math.round(img.naturalWidth * scale);
+        const h = Math.round(img.naturalHeight * scale);
+        const canvas = document.createElement("canvas");
+        canvas.width = w;
+        canvas.height = h;
+        canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+        let dataUrl;
+        try { dataUrl = canvas.toDataURL("image/jpeg", 0.82); } catch { toast("Couldn't process that image."); return; }
+        try { localStorage.setItem("bp:decoyImage", dataUrl); } catch { toast("That image is too large to save."); return; }
+        applyDecoyImage(dataUrl);
+        toast("Hiding-screen image saved");
+      };
+      img.onerror = () => toast("That file isn't a valid image.");
+      img.src = reader.result;
+    };
+    reader.onerror = () => toast("Couldn't read that file.");
+    reader.readAsDataURL(file);
+  }
+
+  function clearDecoyImage() {
+    try { localStorage.removeItem("bp:decoyImage"); } catch { /* storage unavailable */ }
+    applyDecoyImage("");
+    toast("Using the default hiding screen");
+  }
+
   // ------------------------------------------------------------------ browser
 
   let browsing = false;
@@ -866,12 +916,21 @@
       if ($("#settings").returnValue === "save") saveSettings();
     });
     $("#resetProxy").addEventListener("click", resetProxy);
+
+    $("#setDecoyPick").addEventListener("click", () => $("#setDecoyFile").click());
+    $("#setDecoyFile").addEventListener("change", (e) => {
+      const file = e.target.files && e.target.files[0];
+      e.target.value = ""; // let the same file be chosen again later
+      if (file) setDecoyImageFromFile(file);
+    });
+    $("#setDecoyClear").addEventListener("click", clearDecoyImage);
   }
 
   // ------------------------------------------------------------------ start
 
   renderApps();
   bindEvents();
+  applyDecoyImage(storedDecoyImage());
   loadCatalog().catch(() => {});
   route();
 })();
