@@ -5,8 +5,9 @@ because the gate runs on their servers (`functions/`) and only sends the app to 
 logged-in visitor. GitHub Pages can't do that — it just serves files — so the
 github.io copy stays locked with no way in; use the Cloudflare URL as the real site.
 
-Your **owner passcode is `8036`**. It lives only in a server secret, never in the
-page. Keep it private; anyone with it can manage visitor codes.
+Your **owner passcode** is the 4-digit code shared with you privately (set it as the
+`OWNER_PASSCODE` secret below). It lives only in a server secret, never in the page or
+this repo. Keep it private; anyone with it can manage visitor codes.
 
 ## One-time setup (Cloudflare dashboard — no command line needed)
 
@@ -24,13 +25,13 @@ page. Keep it private; anyone with it can manage visitor codes.
    (or **Bindings**):
    - **KV namespace bindings** → add: Variable name **`LOCK`** → your `brickyprocky-lock` namespace.
    - **Environment variables** (Production) → add two, and tick **Encrypt** on each:
-     - `OWNER_PASSCODE` = `8036`
+     - `OWNER_PASSCODE` = your 4-digit owner code (the one shared with you privately)
      - `SESSION_SECRET` = a long random string (e.g. run
        `python -c "import secrets;print(secrets.token_hex(32))"`, or mash the keyboard — 40+ chars)
 6. **Deployments → Retry deployment** (or push any commit) so the new bindings take effect.
 
 Open `https://brickyprocky.pages.dev` → you should get the passcode screen. Enter
-`8036` to get in as owner; **Settings → Visitor codes** shows 20 one-time codes with
+your owner code to get in as owner; **Settings → Visitor codes** shows 20 one-time codes with
 an **Add 10 codes** button. Hand a code to a friend on *any device* — it works once,
 then shows as used for everyone.
 

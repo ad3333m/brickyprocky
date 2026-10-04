@@ -8,8 +8,8 @@ Games and a web proxy in one glassy site: **https://ad3333m.github.io/brickyproc
 - **Proxy**: open any site inside BrickyProcky. Suggested apps include GeForce NOW,
   Discord, YouTube, Spotify, TikTok, Twitch and Reddit.
 - **Passcode (secure, server-side)**: the app is gated by a passcode (masked input).
-  The owner code is a server secret (`OWNER_PASSCODE`, set to `8036`); entering it
-  reveals **one-time visitor codes** in Settings (20 to start, "Add 10 codes" for more)
+  The owner code is a server secret (`OWNER_PASSCODE`, a 4-digit code you set at
+  deploy — never stored in the repo); entering it reveals **one-time visitor codes** in Settings (20 to start, "Add 10 codes" for more)
   that each let someone in once, **on any device**. Auth runs in Cloudflare Pages
   Functions (`functions/`) with a KV store, so the gate and codes are enforced on the
   server, not in the page. This is only secure on the Cloudflare deployment — see
