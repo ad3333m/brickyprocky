@@ -101,7 +101,9 @@ const SOURCES = {
 
 async function main() {
   const catalog = JSON.parse(fs.readFileSync(CATALOG, "utf8"));
-  const todo = catalog.games.filter((g) => !g.thumb || !fs.existsSync(path.join(ROOT, "docs", g.thumb)));
+  const badFile = path.join(ROOT, "tools", "bad-covers.json");
+  const bad = fs.existsSync(badFile) ? new Set(JSON.parse(fs.readFileSync(badFile, "utf8"))) : new Set();
+  const todo = catalog.games.filter((g) => !bad.has(g.id) && (!g.thumb || !fs.existsSync(path.join(ROOT, "docs", g.thumb))));
   console.log(`${todo.length} games without a cover`);
 
   fs.mkdirSync(path.join(CACHE, "covers"), { recursive: true });

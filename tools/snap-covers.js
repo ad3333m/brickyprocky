@@ -82,7 +82,9 @@ function launch() {
 
 async function main() {
   const catalog = JSON.parse(fs.readFileSync(CATALOG, "utf8"));
-  const todo = catalog.games.filter((g) => !g.thumb || RETAKE.has(g.id));
+  const badFile = path.join(ROOT, "tools", "bad-covers.json");
+  const bad = fs.existsSync(badFile) ? new Set(JSON.parse(fs.readFileSync(badFile, "utf8"))) : new Set();
+  const todo = catalog.games.filter((g) => (!g.thumb || RETAKE.has(g.id)) && !bad.has(g.id));
   console.log(`${todo.length} games to screenshot`);
   if (!todo.length) return;
   fs.mkdirSync(SNAPS, { recursive: true });

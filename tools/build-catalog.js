@@ -345,6 +345,15 @@ async function main() {
   }
   makeCovers(coverJobs);
 
+  // Covers that came out bad (warning screens, loading pages, engine logos) are
+  // dropped so those games show a clean name tile. See tools/bad-covers.json;
+  // find-covers.js and snap-covers.js skip these too.
+  const badFile = path.join(ROOT, "tools", "bad-covers.json");
+  if (fs.existsSync(badFile)) {
+    const bad = new Set(JSON.parse(fs.readFileSync(badFile, "utf8")));
+    for (const g of catalog) if (bad.has(g.id)) delete g.thumb;
+  }
+
   const keep = new Set(catalog.map((g) => g.id + ".webp"));
   for (const file of fs.readdirSync(path.join(OUT, "thumbs"))) {
     if (!keep.has(file)) fs.rmSync(path.join(OUT, "thumbs", file));
