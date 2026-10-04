@@ -2,7 +2,7 @@
 // Owner passcode (server secret) or an unused one-time visitor code grants a
 // signed session cookie. Rate-limited per IP to blunt brute force.
 
-import { json, sign, timingSafeEqual, setSessionCookies, sessionExpiry } from "../_lib.js";
+import { json, sign, timingSafeEqual, setSessionCookies, sessionExpiry, getCodes, putCodes } from "../_lib.js";
 
 export async function onRequestPost(context) {
   const { request, env } = context;
@@ -25,17 +25,13 @@ export async function onRequestPost(context) {
   if (timingSafeEqual(code, String(env.OWNER_PASSCODE).trim().toUpperCase())) {
     role = "owner";
   } else {
-    const key = "vc:" + code;
-    const raw = await env.LOCK.get(key);
-    if (raw) {
-      let rec;
-      try { rec = JSON.parse(raw); } catch { rec = null; }
-      if (rec && !rec.used) {
-        rec.used = true;
-        rec.usedAt = Date.now();
-        await env.LOCK.put(key, JSON.stringify(rec));
-        role = "visitor";
-      }
+    const codes = await getCodes(env);
+    const hit = codes.find((c) => c.code === code && !c.used);
+    if (hit) {
+      hit.used = true;
+      hit.usedAt = Date.now();
+      await putCodes(env, codes);
+      role = "visitor";
     }
   }
 

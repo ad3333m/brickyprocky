@@ -1,0 +1,10 @@
+# Cloudflare Pages config for the BrickyProcky secure lock.
+# Serves docs/ with the functions/ gate. Secrets (OWNER_PASSCODE, SESSION_SECRET)
+# are set with `wrangler pages secret put`, never stored here.
+name = "brickyprocky"
+pages_build_output_dir = "docs"
+compatibility_date = "2024-11-01"
+
+[[kv_namespaces]]
+binding = "LOCK"
+id = "69e1746526764c9093368cb6748e9d92"

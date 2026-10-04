@@ -6,5 +6,5 @@
 //              "https://brickyprocky.pages.dev/". Leave "" to disable.
 window.BP_CONFIG = {
   api: "/api",
-  secureUrl: "",
+  secureUrl: "https://brickyprocky.pages.dev/",
 };

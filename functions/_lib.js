@@ -71,6 +71,16 @@ export function newCode() {
   return s;
 }
 
+// Visitor codes are kept in one KV value, not one key each: KV list() is only
+// eventually consistent, so freshly written keys don't show up right away. A
+// single value we read and write whole avoids that.
+export async function getCodes(env) {
+  try { return JSON.parse(await env.LOCK.get("codes")) || []; } catch { return []; }
+}
+export async function putCodes(env, codes) {
+  await env.LOCK.put("codes", JSON.stringify(codes));
+}
+
 const SESSION_MS = 30 * 24 * 3600 * 1000;
 export function sessionExpiry() { return Date.now() + SESSION_MS; }
 
