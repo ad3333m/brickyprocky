@@ -82,14 +82,37 @@ export function freshCodes(n, ownerCode) {
   return list;
 }
 
-// Visitor codes are kept in one KV value, not one key each: KV list() is only
-// eventually consistent, so freshly written keys don't show up right away. A
-// single value we read and write whole avoids that.
-export async function getCodes(env) {
-  try { return JSON.parse(await env.LOCK.get("codes")) || []; } catch { return []; }
+// Visitor codes live in D1 (SQL). KV was eventually consistent, so a freshly
+// made code could take up to a minute to work on another device; D1 is strongly
+// consistent, so a code works the instant it's created and one-time use is atomic.
+export async function listCodes(env) {
+  const { results } = await env.DB.prepare(
+    "SELECT code, used, used_at AS usedAt, created FROM codes ORDER BY created ASC"
+  ).all();
+  return (results || []).map((r) => ({ code: r.code, used: !!r.used, usedAt: r.usedAt, created: r.created }));
 }
-export async function putCodes(env, codes) {
-  await env.LOCK.put("codes", JSON.stringify(codes));
+// Marks a code used only if it exists and wasn't used yet — in one atomic UPDATE,
+// so the same code can't be redeemed twice even under a race. Returns true on success.
+export async function consumeCode(env, code) {
+  const res = await env.DB.prepare(
+    "UPDATE codes SET used = 1, used_at = ?1 WHERE code = ?2 AND used = 0"
+  ).bind(Date.now(), code).run();
+  return !!(res.meta && res.meta.changes > 0);
+}
+export async function replaceCodes(env, codes) {
+  const stmts = [env.DB.prepare("DELETE FROM codes")];
+  for (const c of codes) {
+    stmts.push(env.DB.prepare("INSERT INTO codes (code, used, created) VALUES (?1, 0, ?2)").bind(c.code, c.created));
+  }
+  await env.DB.batch(stmts);
+}
+export async function seedIfEmpty(env, ownerCode) {
+  const row = await env.DB.prepare("SELECT COUNT(*) AS n FROM codes").first();
+  if (!row || row.n === 0) {
+    await replaceCodes(env, freshCodes(10, ownerCode));
+    return true;
+  }
+  return false;
 }
 
 const SESSION_MS = 12 * 3600 * 1000; // token lifetime backstop
