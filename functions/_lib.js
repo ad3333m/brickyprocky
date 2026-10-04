@@ -62,13 +62,24 @@ export function timingSafeEqual(a, b) {
   return diff === 0;
 }
 
-const ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"; // no 0/O/1/I/L ambiguity
 export function newCode() {
-  const r = new Uint32Array(6);
+  const r = new Uint32Array(1);
   crypto.getRandomValues(r);
-  let s = "";
-  for (let i = 0; i < 6; i++) s += ALPHABET[r[i] % ALPHABET.length];
-  return s;
+  return String(r[0] % 10000).padStart(4, "0"); // random 4-digit code
+}
+
+// A fresh set of n unique visitor codes, none equal to the owner passcode.
+export function freshCodes(n, ownerCode) {
+  const owner = String(ownerCode || "").trim();
+  const seen = new Set();
+  const list = [];
+  while (list.length < n) {
+    const code = newCode();
+    if (code === owner || seen.has(code)) continue;
+    seen.add(code);
+    list.push({ code, used: false, created: Date.now() });
+  }
+  return list;
 }
 
 // Visitor codes are kept in one KV value, not one key each: KV list() is only
@@ -81,15 +92,22 @@ export async function putCodes(env, codes) {
   await env.LOCK.put("codes", JSON.stringify(codes));
 }
 
-const SESSION_MS = 30 * 24 * 3600 * 1000;
+const SESSION_MS = 12 * 3600 * 1000; // token lifetime backstop
 export function sessionExpiry() { return Date.now() + SESSION_MS; }
 
+// bp_session (the gate) is HttpOnly so scripts can't read it. bp_role is readable
+// so the app can show the owner tools. Both are session cookies (no Max-Age): they
+// die when the browser closes. A refresh keeps the session — the app re-shows the
+// lock itself (see bp_fresh) and re-checks the code without using up a visitor code.
 export function setSessionCookies(res, token, role) {
-  const base = `Path=/; Max-Age=${SESSION_MS / 1000}; SameSite=Lax; Secure`;
+  const base = "Path=/; SameSite=Lax; Secure";
   res.headers.append("set-cookie", `bp_session=${token}; HttpOnly; ${base}`);
-  // Readable by the app so it knows the role and skips the in-app lock. Not a
-  // security boundary — access is already gated by the HttpOnly session cookie.
   res.headers.append("set-cookie", `bp_role=${role}; ${base}`);
+}
+// One-shot marker: the page opened right after entering the code reads it once and
+// deletes it, so it doesn't ask again immediately — but the next refresh will.
+export function setFreshCookie(res) {
+  res.headers.append("set-cookie", "bp_fresh=1; Path=/; Max-Age=60; SameSite=Lax; Secure");
 }
 export function clearSessionCookies(res) {
   const base = "Path=/; Max-Age=0; SameSite=Lax; Secure";

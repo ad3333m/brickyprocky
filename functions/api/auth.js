@@ -2,7 +2,7 @@
 // Owner passcode (server secret) or an unused one-time visitor code grants a
 // signed session cookie. Rate-limited per IP to blunt brute force.
 
-import { json, sign, timingSafeEqual, setSessionCookies, sessionExpiry, getCodes, putCodes } from "../_lib.js";
+import { json, sign, timingSafeEqual, setSessionCookies, setFreshCookie, sessionExpiry, getCodes, putCodes } from "../_lib.js";
 
 export async function onRequestPost(context) {
   const { request, env } = context;
@@ -37,8 +37,13 @@ export async function onRequestPost(context) {
 
   if (!role) return json({ error: "invalid" }, { status: 401 });
 
-  const token = await sign(env.SESSION_SECRET, { r: role, exp: sessionExpiry() });
+  // Remember the visitor's code in the (signed) token so a refresh can re-check it
+  // without spending another one-time code. The owner is re-checked against the secret.
+  const payload = { r: role, exp: sessionExpiry() };
+  if (role === "visitor") payload.c = code;
+  const token = await sign(env.SESSION_SECRET, payload);
   const res = json({ ok: true, role });
   setSessionCookies(res, token, role);
+  setFreshCookie(res);
   return res;
 }

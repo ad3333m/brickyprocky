@@ -791,6 +791,9 @@
     $("#lockInput").select();
   }
 
+  // The in-app lock appears on a refresh (the session is still valid). Re-checking
+  // the code here does NOT spend a one-time visitor code — it just confirms and
+  // reveals the app. First-time entry happens on the server's own lock page.
   async function tryUnlock(raw) {
     const code = (raw || "").trim();
     if (!code) return;
@@ -798,7 +801,7 @@
     err.textContent = "";
     let res;
     try {
-      res = await fetch(API + "/auth", {
+      res = await fetch(API + "/relock", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ code }),
@@ -809,9 +812,15 @@
       shakeLock();
       return;
     }
-    if (res.ok) { location.reload(); return; }
+    if (res.ok) {
+      document.documentElement.classList.remove("locked");
+      $("#lockInput").value = "";
+      return;
+    }
     if (res.status === 429) err.textContent = "Too many tries — wait a minute.";
-    else if (res.status === 404 || res.status === 500) {
+    else if (res.status === 401 && !SECURE_URL && location.hostname.endsWith("github.io")) {
+      err.textContent = "Open the secure BrickyProcky link instead.";
+    } else if (res.status === 404 || res.status === 500) {
       err.textContent = SECURE_URL ? "Open the secure BrickyProcky link instead." : "The lock isn't set up on this site.";
       if (SECURE_URL) $("#lockGo").hidden = false;
     } else err.textContent = "Incorrect passcode";
@@ -838,18 +847,15 @@
     }
   }
 
-  async function addCodes() {
+  async function refreshCodes() {
+    if (!confirm("Replace all visitor codes with 10 new ones? The current codes will stop working.")) return;
     try {
-      const res = await fetch(API + "/codes", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ count: 10 }),
-      });
+      const res = await fetch(API + "/codes", { method: "POST", headers: { "content-type": "application/json" } });
       if (!res.ok) throw new Error("http " + res.status);
       await renderCodes();
-      toast("Added 10 visitor codes");
+      toast("New visitor codes generated");
     } catch {
-      toast("Couldn't add codes.");
+      toast("Couldn't refresh codes.");
     }
   }
 
@@ -1034,7 +1040,7 @@
     });
 
     // Visitor codes (owner only)
-    $("#addCodes").addEventListener("click", addCodes);
+    $("#addCodes").addEventListener("click", refreshCodes);
     $("#codeList").addEventListener("click", async (e) => {
       const btn = e.target.closest(".code-copy");
       if (!btn || btn.disabled) return;

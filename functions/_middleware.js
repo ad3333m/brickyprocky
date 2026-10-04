@@ -11,7 +11,18 @@ export async function onRequest(context) {
   // The auth endpoints handle their own checks.
   if (path.startsWith("/api/")) return next();
 
-  if (await session(context)) return next();
+  if (await session(context)) {
+    // Never let the browser cache the HTML, or a refresh after the session is
+    // cleared would serve a stale (logged-in) page from cache while its gated
+    // assets 401 — the "unstyled page" bug. Assets can still cache normally.
+    const res = await next();
+    if ((res.headers.get("content-type") || "").includes("text/html")) {
+      const fresh = new Response(res.body, res);
+      fresh.headers.set("cache-control", "no-store");
+      return fresh;
+    }
+    return res;
+  }
 
   const accept = request.headers.get("accept") || "";
   if (request.method === "GET" && accept.includes("text/html")) {
