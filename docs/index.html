@@ -11,12 +11,14 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="assets/app.css" />
+  <script src="config.js"></script>
   <script>
-    // Runs before paint: lock the app until a passcode is entered this session,
-    // and pick "lite" mode on weak hardware (school Chromebooks) to avoid a flash.
+    // Runs before paint: show the lock unless the server has granted a session
+    // (the bp_role cookie set by the Cloudflare gate), and pick "lite" mode on
+    // weak hardware (school Chromebooks). Avoids a flash of the wrong screen.
     (function () {
       try {
-        if (sessionStorage.getItem("bp:unlocked") !== "1") document.documentElement.classList.add("locked");
+        if (!/(?:^|; )bp_role=/.test(document.cookie)) document.documentElement.classList.add("locked");
         var perf = localStorage.getItem("bp:perf");
         var weak = (navigator.hardwareConcurrency || 8) <= 4 || (navigator.deviceMemory || 8) <= 4;
         if (perf === "lite" || (perf !== "full" && weak)) document.documentElement.classList.add("lite");
@@ -222,6 +224,7 @@
         <button class="btn primary" type="submit">Unlock</button>
       </form>
       <p class="lock-error" id="lockError" role="alert"></p>
+      <a class="btn ghost" id="lockGo" href="#" hidden>Go to the secure site</a>
     </div>
   </div>
 

@@ -769,71 +769,88 @@
   }
 
   // ------------------------------------------------------------------ passcode lock
-  // A light gate so the app asks for a code to open. The owner code always works
-  // and reveals a list of one-time visitor codes (managed in Settings). Everything
-  // is stored in this browser, so it's a gate for a shared computer, not real
-  // security — anyone with dev tools could get around it.
-  const OWNER_CODE = "1010";
+  // Auth is enforced on the server (Cloudflare Pages Functions): the edge only
+  // serves the app to a valid signed session, and /api/auth checks the owner
+  // passcode and one-time visitor codes against shared storage (so codes work on
+  // every device). The owner passcode lives in a server secret, never here. This
+  // in-app screen is a fallback entry point plus the owner's code manager.
+  const API = (window.BP_CONFIG && window.BP_CONFIG.api) || "/api";
+  const SECURE_URL = (window.BP_CONFIG && window.BP_CONFIG.secureUrl) || "";
 
   const isLocked = () => document.documentElement.classList.contains("locked");
   function role() {
-    try { return sessionStorage.getItem("bp:role") || ""; } catch { return ""; }
+    const m = document.cookie.match(/(?:^|; )bp_role=([^;]*)/);
+    return m ? decodeURIComponent(m[1]) : "";
   }
 
-  function loadCodes() {
-    try { return JSON.parse(localStorage.getItem("bp:visitorCodes")) || []; } catch { return []; }
-  }
-  function saveCodes(list) {
-    try { localStorage.setItem("bp:visitorCodes", JSON.stringify(list)); } catch { /* storage full */ }
-  }
-  function newCode() {
-    const alphabet = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"; // no 0/O/1/I/L ambiguity
-    const rand = new Uint32Array(6);
-    if (window.crypto && crypto.getRandomValues) crypto.getRandomValues(rand);
-    let code = "";
-    for (let i = 0; i < 6; i++) code += alphabet[(rand[i] || Math.floor(Math.random() * 1e9)) % alphabet.length];
-    return code;
-  }
-  function makeCodes(n) {
-    const list = loadCodes();
-    for (let i = 0; i < n; i++) list.push({ code: newCode(), used: false });
-    saveCodes(list);
-    return list;
-  }
-  function ensureCodes() {
-    const list = loadCodes();
-    return list.length ? list : makeCodes(20);
+  function shakeLock() {
+    const card = $("#lockCard");
+    card.classList.remove("shake");
+    void card.offsetWidth; // restart the animation
+    card.classList.add("shake");
+    $("#lockInput").select();
   }
 
-  function grant(as) {
+  async function tryUnlock(raw) {
+    const code = (raw || "").trim();
+    if (!code) return;
+    const err = $("#lockError");
+    err.textContent = "";
+    let res;
     try {
-      sessionStorage.setItem("bp:unlocked", "1");
-      sessionStorage.setItem("bp:role", as);
-    } catch { /* private mode */ }
-    document.documentElement.classList.remove("locked");
-    $("#lockInput").value = "";
+      res = await fetch(API + "/auth", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ code }),
+      });
+    } catch {
+      err.textContent = "Couldn't reach the lock server. Check your connection.";
+      if (SECURE_URL) $("#lockGo").hidden = false;
+      shakeLock();
+      return;
+    }
+    if (res.ok) { location.reload(); return; }
+    if (res.status === 429) err.textContent = "Too many tries — wait a minute.";
+    else if (res.status === 404 || res.status === 500) {
+      err.textContent = SECURE_URL ? "Open the secure BrickyProcky link instead." : "The lock isn't set up on this site.";
+      if (SECURE_URL) $("#lockGo").hidden = false;
+    } else err.textContent = "Incorrect passcode";
+    shakeLock();
   }
 
-  function tryUnlock(raw) {
-    const value = (raw || "").trim().toUpperCase();
-    if (!value) return false;
-    if (value === OWNER_CODE) { grant("owner"); return true; }
-    const list = loadCodes();
-    const hit = list.find((c) => c.code === value && !c.used);
-    if (hit) { hit.used = true; hit.usedAt = Date.now(); saveCodes(list); grant("visitor"); return true; }
-    return false;
-  }
-
-  function renderCodes() {
+  async function renderCodes() {
     const field = $("#codesField");
     if (role() !== "owner") { field.hidden = true; return; }
     field.hidden = false;
-    const list = ensureCodes();
-    const used = list.filter((c) => c.used).length;
-    $("#codesCount").textContent = `· ${list.length - used} unused, ${used} used`;
-    $("#codeList").innerHTML = list
-      .map((c) => `<li class="code-row${c.used ? " used" : ""}"><code>${c.code}</code><button class="code-copy" type="button" data-code="${c.code}"${c.used ? " disabled" : ""} aria-label="Copy code ${c.code}">${c.used ? "used" : "copy"}</button></li>`)
-      .join("");
+    $("#codesCount").textContent = "· loading…";
+    try {
+      const res = await fetch(API + "/codes", { headers: { accept: "application/json" } });
+      if (!res.ok) throw new Error("http " + res.status);
+      const { codes } = await res.json();
+      const used = codes.filter((c) => c.used).length;
+      $("#codesCount").textContent = `· ${codes.length - used} unused, ${used} used`;
+      $("#codeList").innerHTML = codes
+        .map((c) => `<li class="code-row${c.used ? " used" : ""}"><code>${c.code}</code><button class="code-copy" type="button" data-code="${c.code}"${c.used ? " disabled" : ""} aria-label="Copy code ${c.code}">${c.used ? "used" : "copy"}</button></li>`)
+        .join("");
+    } catch {
+      $("#codesCount").textContent = "· couldn't load codes";
+      $("#codeList").innerHTML = "";
+    }
+  }
+
+  async function addCodes() {
+    try {
+      const res = await fetch(API + "/codes", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ count: 10 }),
+      });
+      if (!res.ok) throw new Error("http " + res.status);
+      await renderCodes();
+      toast("Added 10 visitor codes");
+    } catch {
+      toast("Couldn't add codes.");
+    }
   }
 
   function perfMode() {
@@ -1007,16 +1024,7 @@
     // Passcode lock
     $("#lockForm").addEventListener("submit", (e) => {
       e.preventDefault();
-      if (tryUnlock($("#lockInput").value)) {
-        $("#lockError").textContent = "";
-      } else {
-        $("#lockError").textContent = "Incorrect passcode";
-        const card = $("#lockCard");
-        card.classList.remove("shake");
-        void card.offsetWidth; // restart the shake animation
-        card.classList.add("shake");
-        $("#lockInput").select();
-      }
+      tryUnlock($("#lockInput").value);
     });
 
     // Performance mode
@@ -1026,11 +1034,7 @@
     });
 
     // Visitor codes (owner only)
-    $("#addCodes").addEventListener("click", () => {
-      makeCodes(10);
-      renderCodes();
-      toast("Added 10 visitor codes");
-    });
+    $("#addCodes").addEventListener("click", addCodes);
     $("#codeList").addEventListener("click", async (e) => {
       const btn = e.target.closest(".code-copy");
       if (!btn || btn.disabled) return;
@@ -1049,7 +1053,14 @@
   bindEvents();
   applyPerf(perfMode());
   applyDecoyImage(storedDecoyImage());
-  if (isLocked()) $("#lockInput").focus();
+  if (isLocked()) {
+    $("#lockInput").focus();
+    if (SECURE_URL && location.origin + location.pathname !== SECURE_URL) {
+      const go = $("#lockGo");
+      go.href = SECURE_URL;
+      go.hidden = false;
+    }
+  }
   loadCatalog().catch(() => {});
   route();
 })();
