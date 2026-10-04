@@ -11,6 +11,18 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="assets/app.css" />
+  <script>
+    // Runs before paint: lock the app until a passcode is entered this session,
+    // and pick "lite" mode on weak hardware (school Chromebooks) to avoid a flash.
+    (function () {
+      try {
+        if (sessionStorage.getItem("bp:unlocked") !== "1") document.documentElement.classList.add("locked");
+        var perf = localStorage.getItem("bp:perf");
+        var weak = (navigator.hardwareConcurrency || 8) <= 4 || (navigator.deviceMemory || 8) <= 4;
+        if (perf === "lite" || (perf !== "full" && weak)) document.documentElement.classList.add("lite");
+      } catch (e) {}
+    })();
+  </script>
   <script src="scram/scramjet.all.js" defer></script>
   <script src="baremux/index.js" defer></script>
   <script src="assets/app.js" defer></script>
@@ -199,6 +211,20 @@
     <img class="nt-image" id="ntImage" alt="" hidden />
   </div>
 
+  <!-- Passcode lock: must be entered to use the app -->
+  <div class="lock" id="lock">
+    <div class="lock-card glass" id="lockCard">
+      <img src="assets/logo.svg" width="54" height="54" alt="" />
+      <h2>BrickyProcky</h2>
+      <p>Enter your passcode</p>
+      <form id="lockForm" autocomplete="off">
+        <input id="lockInput" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Passcode" placeholder="••••" />
+        <button class="btn primary" type="submit">Unlock</button>
+      </form>
+      <p class="lock-error" id="lockError" role="alert"></p>
+    </div>
+  </div>
+
   <!-- Settings -->
   <dialog class="modal glass" id="settings" aria-labelledby="settingsTitle">
     <form method="dialog">
@@ -243,6 +269,22 @@
         </div>
         <small class="hs-note" id="decoyNote">Showing the default start page.</small>
         <input id="setDecoyFile" type="file" accept="image/*" hidden />
+      </div>
+      <label class="field">
+        <span>Performance</span>
+        <select id="setPerf">
+          <option value="auto">Automatic</option>
+          <option value="lite">Lite — faster on Chromebooks</option>
+          <option value="full">Full effects</option>
+        </select>
+      </label>
+      <div class="field" id="codesField" hidden>
+        <span>Visitor codes <small class="hs-note" id="codesCount" style="font-weight:600"></small></span>
+        <small class="hs-note">One-time codes to let someone in on this computer. Your owner code always works.</small>
+        <ul class="code-list" id="codeList"></ul>
+        <div class="hs-row">
+          <button class="btn" type="button" id="addCodes">Add 10 codes</button>
+        </div>
       </div>
       <div class="modal-actions">
         <button class="btn ghost" type="button" id="resetProxy">Reset proxy data</button>

@@ -7,6 +7,14 @@ Games and a web proxy in one glassy site: **https://ad3333m.github.io/brickyproc
   [Poxel.io](https://poxel.io). Search, categories, favourites and "jump back in".
 - **Proxy**: open any site inside BrickyProcky. Suggested apps include GeForce NOW,
   Discord, YouTube, Spotify, TikTok, Twitch and Reddit.
+- **Passcode**: the app is gated by a passcode (masked input). The owner code is
+  `1010`; entering it reveals **one-time visitor codes** in Settings (start with 20,
+  "Add 10 codes" for more) that each let someone in once. Codes live in that browser's
+  localStorage — a light gate for a shared computer, not real security, and codes don't
+  sync to other devices (no server).
+- **Performance**: a Settings option (Automatic / Lite / Full). Lite drops the blur
+  and animated background for weak hardware; it auto-enables on low-core/low-memory
+  devices (typical school Chromebooks).
 - **Panic key**: **Ctrl+1** drops a plain, unbranded start-page overlay over the app
   (and swaps the tab to "New Tab"); **Ctrl+2**, **Esc**, or the **`** key bring it back.
   It can't intercept keys while a cross-origin game iframe holds focus. Settings can

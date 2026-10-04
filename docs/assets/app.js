@@ -725,6 +725,8 @@
     $("#relayCustomField").hidden = settings.relay !== "custom";
     $("#setTransport").value = settings.transport;
     $("#setEngine").value = settings.engine;
+    $("#setPerf").value = perfMode();
+    renderCodes();
     $("#settings").showModal();
   }
 
@@ -764,6 +766,82 @@
     } catch { /* best effort */ }
     location.replace(BASE + "#/proxy");
     location.reload();
+  }
+
+  // ------------------------------------------------------------------ passcode lock
+  // A light gate so the app asks for a code to open. The owner code always works
+  // and reveals a list of one-time visitor codes (managed in Settings). Everything
+  // is stored in this browser, so it's a gate for a shared computer, not real
+  // security — anyone with dev tools could get around it.
+  const OWNER_CODE = "1010";
+
+  const isLocked = () => document.documentElement.classList.contains("locked");
+  function role() {
+    try { return sessionStorage.getItem("bp:role") || ""; } catch { return ""; }
+  }
+
+  function loadCodes() {
+    try { return JSON.parse(localStorage.getItem("bp:visitorCodes")) || []; } catch { return []; }
+  }
+  function saveCodes(list) {
+    try { localStorage.setItem("bp:visitorCodes", JSON.stringify(list)); } catch { /* storage full */ }
+  }
+  function newCode() {
+    const alphabet = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"; // no 0/O/1/I/L ambiguity
+    const rand = new Uint32Array(6);
+    if (window.crypto && crypto.getRandomValues) crypto.getRandomValues(rand);
+    let code = "";
+    for (let i = 0; i < 6; i++) code += alphabet[(rand[i] || Math.floor(Math.random() * 1e9)) % alphabet.length];
+    return code;
+  }
+  function makeCodes(n) {
+    const list = loadCodes();
+    for (let i = 0; i < n; i++) list.push({ code: newCode(), used: false });
+    saveCodes(list);
+    return list;
+  }
+  function ensureCodes() {
+    const list = loadCodes();
+    return list.length ? list : makeCodes(20);
+  }
+
+  function grant(as) {
+    try {
+      sessionStorage.setItem("bp:unlocked", "1");
+      sessionStorage.setItem("bp:role", as);
+    } catch { /* private mode */ }
+    document.documentElement.classList.remove("locked");
+    $("#lockInput").value = "";
+  }
+
+  function tryUnlock(raw) {
+    const value = (raw || "").trim().toUpperCase();
+    if (!value) return false;
+    if (value === OWNER_CODE) { grant("owner"); return true; }
+    const list = loadCodes();
+    const hit = list.find((c) => c.code === value && !c.used);
+    if (hit) { hit.used = true; hit.usedAt = Date.now(); saveCodes(list); grant("visitor"); return true; }
+    return false;
+  }
+
+  function renderCodes() {
+    const field = $("#codesField");
+    if (role() !== "owner") { field.hidden = true; return; }
+    field.hidden = false;
+    const list = ensureCodes();
+    const used = list.filter((c) => c.used).length;
+    $("#codesCount").textContent = `· ${list.length - used} unused, ${used} used`;
+    $("#codeList").innerHTML = list
+      .map((c) => `<li class="code-row${c.used ? " used" : ""}"><code>${c.code}</code><button class="code-copy" type="button" data-code="${c.code}"${c.used ? " disabled" : ""} aria-label="Copy code ${c.code}">${c.used ? "used" : "copy"}</button></li>`)
+      .join("");
+  }
+
+  function perfMode() {
+    try { return localStorage.getItem("bp:perf") || "auto"; } catch { return "auto"; }
+  }
+  function applyPerf(mode) {
+    const weak = (navigator.hardwareConcurrency || 8) <= 4 || (navigator.deviceMemory || 8) <= 4;
+    document.documentElement.classList.toggle("lite", mode === "lite" || (mode !== "full" && weak));
   }
 
   // ------------------------------------------------------------------ events
@@ -816,6 +894,7 @@
     });
 
     document.addEventListener("keydown", (e) => {
+      if (isLocked()) return; // no shortcuts until unlocked
       const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement?.tagName);
       // Ctrl+1 shows the decoy new-tab screen, Ctrl+2 hides it. Backtick toggles
       // it too, as a fallback where the browser keeps Ctrl+1/Ctrl+2 for switching
@@ -924,13 +1003,53 @@
       if (file) setDecoyImageFromFile(file);
     });
     $("#setDecoyClear").addEventListener("click", clearDecoyImage);
+
+    // Passcode lock
+    $("#lockForm").addEventListener("submit", (e) => {
+      e.preventDefault();
+      if (tryUnlock($("#lockInput").value)) {
+        $("#lockError").textContent = "";
+      } else {
+        $("#lockError").textContent = "Incorrect passcode";
+        const card = $("#lockCard");
+        card.classList.remove("shake");
+        void card.offsetWidth; // restart the shake animation
+        card.classList.add("shake");
+        $("#lockInput").select();
+      }
+    });
+
+    // Performance mode
+    $("#setPerf").addEventListener("change", (e) => {
+      try { localStorage.setItem("bp:perf", e.target.value); } catch { /* ignore */ }
+      applyPerf(e.target.value);
+    });
+
+    // Visitor codes (owner only)
+    $("#addCodes").addEventListener("click", () => {
+      makeCodes(10);
+      renderCodes();
+      toast("Added 10 visitor codes");
+    });
+    $("#codeList").addEventListener("click", async (e) => {
+      const btn = e.target.closest(".code-copy");
+      if (!btn || btn.disabled) return;
+      try {
+        await navigator.clipboard.writeText(btn.dataset.code);
+        toast("Code copied");
+      } catch {
+        toast("Code: " + btn.dataset.code);
+      }
+    });
   }
 
   // ------------------------------------------------------------------ start
 
   renderApps();
   bindEvents();
+  applyPerf(perfMode());
   applyDecoyImage(storedDecoyImage());
+  if (isLocked()) $("#lockInput").focus();
   loadCatalog().catch(() => {});
   route();
 })();
