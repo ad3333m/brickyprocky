@@ -827,6 +827,14 @@
     shakeLock();
   }
 
+  function renderCodeList(codes) {
+    const used = codes.filter((c) => c.used).length;
+    $("#codesCount").textContent = `· ${codes.length - used} unused, ${used} used`;
+    $("#codeList").innerHTML = codes
+      .map((c) => `<li class="code-row${c.used ? " used" : ""}"><code>${c.code}</code><button class="code-copy" type="button" data-code="${c.code}"${c.used ? " disabled" : ""} aria-label="Copy code ${c.code}">${c.used ? "used" : "copy"}</button></li>`)
+      .join("");
+  }
+
   async function renderCodes() {
     const field = $("#codesField");
     if (role() !== "owner") { field.hidden = true; return; }
@@ -835,27 +843,28 @@
     try {
       const res = await fetch(API + "/codes", { headers: { accept: "application/json" } });
       if (!res.ok) throw new Error("http " + res.status);
-      const { codes } = await res.json();
-      const used = codes.filter((c) => c.used).length;
-      $("#codesCount").textContent = `· ${codes.length - used} unused, ${used} used`;
-      $("#codeList").innerHTML = codes
-        .map((c) => `<li class="code-row${c.used ? " used" : ""}"><code>${c.code}</code><button class="code-copy" type="button" data-code="${c.code}"${c.used ? " disabled" : ""} aria-label="Copy code ${c.code}">${c.used ? "used" : "copy"}</button></li>`)
-        .join("");
+      renderCodeList((await res.json()).codes);
     } catch {
       $("#codesCount").textContent = "· couldn't load codes";
       $("#codeList").innerHTML = "";
     }
   }
 
+  // Replace all codes with a fresh set. Render straight from the POST response —
+  // a follow-up GET could read the old set back (KV is eventually consistent).
   async function refreshCodes() {
-    if (!confirm("Replace all visitor codes with 10 new ones? The current codes will stop working.")) return;
+    const btn = $("#addCodes");
+    btn.disabled = true;
+    $("#codesCount").textContent = "· refreshing…";
     try {
       const res = await fetch(API + "/codes", { method: "POST", headers: { "content-type": "application/json" } });
       if (!res.ok) throw new Error("http " + res.status);
-      await renderCodes();
+      renderCodeList((await res.json()).codes);
       toast("New visitor codes generated");
     } catch {
       toast("Couldn't refresh codes.");
+    } finally {
+      btn.disabled = false;
     }
   }
 
